@@ -29,7 +29,7 @@ import {
 } from "@/lib/tr/productOptions";
 import { resolveProductModelScale } from "@/lib/tr/fashion/modelMeasurements";
 import { isSizeInStock } from "@/lib/tr/sizeStocks";
-import { trBoutiquePath } from "@/lib/tr/paths";
+import { trBoutiquePath, trBoutiqueProductsPath } from "@/lib/tr/paths";
 import { resolveBoutiqueThemeAccent } from "@/lib/tr/boutiqueBrand";
 import { useTrAddedToCartStore } from "@/store/trAddedToCartStore";
 import { priceRange, publicVariantLabel } from "@/lib/tr/variants/storefront";
@@ -177,9 +177,20 @@ export function TrProductDetailPanel({
           </p>
         ) : null}
 
+        {branded && !atelier && product.brand ? (
+          <p className="mt-5 text-[11px] font-semibold tracking-[0.16em] text-[color:var(--nat-bark,#52525b)] uppercase">
+            <TrSoftNavLink
+              href={`${trBoutiqueProductsPath(product.boutique.slug)}?marka=${encodeURIComponent(product.brand)}`}
+              className="transition-opacity hover:opacity-70"
+            >
+              {product.brand}
+            </TrSoftNavLink>
+          </p>
+        ) : null}
+
         <div
           className={`flex items-start justify-between gap-4 ${
-            branded ? "mt-4" : "mt-3"
+            branded ? (product.brand && !atelier ? "mt-2" : "mt-4") : "mt-3"
           }`}
         >
           <h1
@@ -344,7 +355,23 @@ export function TrProductDetailPanel({
           </div>
         </dl>
 
-        {product.description ? (
+        {product.descriptionHtml && !atelier ? (
+          <div
+            className={`mt-6 pt-6 ${
+              branded
+                ? "border-t border-black/5"
+                : "border-t border-blueprint-border"
+            }`}
+          >
+            <p className="text-[11px] tracking-[0.1em] text-neutral-500 uppercase">
+              Ürün detay
+            </p>
+            <div
+              className="rich-prose mt-3 text-[14px] leading-relaxed text-neutral-800"
+              dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+            />
+          </div>
+        ) : product.description ? (
           <div
             className={`mt-6 pt-6 ${
               branded

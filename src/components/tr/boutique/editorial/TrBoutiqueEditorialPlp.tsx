@@ -7,7 +7,8 @@ import { Search } from "lucide-react";
 import { useStorefrontTaxonomy } from "@/components/tr/boutique/TrBoutiqueTaxonomy";
 import { TrBoutiqueAtelierPlp } from "@/components/tr/boutique/editorial/TrBoutiqueAtelierPlp";
 import { TrBoutiqueEditorialProductCard } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialProductCard";
-import { isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { TrBoutiqueNaturalPlp } from "@/components/tr/boutique/natural/TrBoutiqueNaturalPlp";
+import { isAtelierEditorialSkin, isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
 import { trBoutiquePath, trBoutiqueProductsPath } from "@/lib/tr/paths";
 import { resolveProductColors } from "@/lib/tr/productOptions";
 import type { TrStorefrontTaxonomy } from "@/lib/tr/categories/taxonomy";
@@ -55,6 +56,18 @@ export function TrBoutiqueEditorialPlp({
   categoryScope = null,
   intro = null,
 }: TrBoutiqueEditorialPlpProps) {
+  if (isNaturalEditorialSkin(boutique.slug)) {
+    return (
+      <TrBoutiqueNaturalPlp
+        boutique={boutique}
+        products={products}
+        categoryId={categoryId}
+        categoryScope={categoryScope}
+        intro={intro}
+      />
+    );
+  }
+
   if (isAtelierEditorialSkin(boutique.slug)) {
     return (
       <TrBoutiqueAtelierPlp

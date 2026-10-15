@@ -442,6 +442,189 @@ html.intro-loading-boutique body {
     }
   }
 
+  /*
+   * "Natural" skin — warm cream, olive and bark for handmade / food / producer-led
+   * stores. The palette lives in custom properties; the Tailwind neutrals and white are
+   * remapped inside the skin, so every shared page (list, product, cart, checkout)
+   * picks up the warm tones without a fork of its markup.
+   */
+  [data-editorial-skin="natural"] {
+    --nat-paper: #faf7f0;
+    --nat-cream: #f3eee2;
+    --nat-sand: #e8e0cf;
+    --nat-line: #ddd4bf;
+    --nat-olive: var(--boutique-accent, #626240);
+    --nat-olive-deep: #3f402a;
+    --nat-bark: #70583f;
+    --nat-sun: #f0c810;
+    --nat-sale: #a64b2a;
+
+    --color-white: #fcfaf5;
+    --color-neutral-50: #f8f5ed;
+    --color-neutral-100: #f1ece0;
+    --color-neutral-200: #e4ddca;
+    --color-neutral-300: #d0c8b1;
+    --color-neutral-400: #a7a08a;
+    --color-neutral-500: #807b67;
+    --color-neutral-600: #625f4d;
+    --color-neutral-700: #4b4a39;
+    --color-neutral-800: #373829;
+    --color-neutral-900: #2a2b1d;
+    --color-neutral-950: #1d1e13;
+  }
+
+  [data-editorial-skin="natural"] .editorial-sale-badge,
+  [data-editorial-skin="natural"] .editorial-sale-text {
+    animation: none;
+  }
+
+  [data-editorial-skin="natural"] .editorial-sale-badge {
+    background-color: var(--nat-sale);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  [data-editorial-skin="natural"] .nat-display {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--nat-bark);
+  }
+
+  [data-editorial-skin="natural"] .nat-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--nat-bark);
+  }
+
+  [data-editorial-skin="natural"] .nat-btn,
+  [data-editorial-skin="natural"] .nat-btn-ghost {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  [data-editorial-skin="natural"] .nat-btn {
+    background: var(--nat-olive);
+    color: #fbf9f3;
+    border: 1px solid var(--nat-olive);
+  }
+
+  [data-editorial-skin="natural"] .nat-btn:hover {
+    background: var(--nat-olive-deep);
+    border-color: var(--nat-olive-deep);
+  }
+
+  [data-editorial-skin="natural"] .nat-btn-ghost {
+    background: transparent;
+    color: var(--nat-olive);
+    border: 1px solid var(--nat-olive);
+  }
+
+  [data-editorial-skin="natural"] .nat-btn-ghost:hover {
+    background: var(--nat-olive);
+    color: #fbf9f3;
+  }
+
+  [data-editorial-skin="natural"] .nat-link {
+    background-image: linear-gradient(var(--nat-sun), var(--nat-sun));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 2px;
+    padding-bottom: 2px;
+    transition: background-size 0.25s ease;
+  }
+
+  [data-editorial-skin="natural"] .nat-link:hover {
+    background-size: 100% 100%;
+  }
+
+  [data-editorial-skin="natural"] :focus-visible {
+    outline: 2px solid var(--nat-sun);
+    outline-offset: 2px;
+  }
+
+  .rich-prose p {
+    margin: 0 0 0.9em;
+  }
+
+  .rich-prose h2,
+  .rich-prose h3 {
+    margin: 1.2em 0 0.4em;
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--nat-bark, inherit);
+    line-height: 1.2;
+  }
+
+  .rich-prose h2 {
+    font-size: 1.35rem;
+  }
+
+  .rich-prose h3 {
+    font-size: 1.15rem;
+  }
+
+  .rich-prose ul,
+  .rich-prose ol {
+    margin: 0 0 1em;
+    padding-left: 1.25rem;
+  }
+
+  .rich-prose ul {
+    list-style: disc;
+  }
+
+  .rich-prose ol {
+    list-style: decimal;
+  }
+
+  .rich-prose li {
+    margin: 0.35em 0;
+  }
+
+  .rich-prose a {
+    color: var(--nat-olive, inherit);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .rich-prose blockquote {
+    margin: 1em 0;
+    padding-left: 1rem;
+    border-left: 3px solid var(--nat-sun, #d4d4d8);
+    color: var(--nat-bark, inherit);
+  }
+
+  .rich-prose hr {
+    margin: 1.4em 0;
+    border: 0;
+    border-top: 1px solid var(--nat-line, #d4d4d8);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-editorial-skin="natural"] .nat-btn,
+    [data-editorial-skin="natural"] .nat-btn-ghost,
+    [data-editorial-skin="natural"] .nat-link {
+      transition: none;
+    }
+  }
+
   /* Boutique route skeletons */
   @keyframes tr-skeleton-shimmer {
     0% {

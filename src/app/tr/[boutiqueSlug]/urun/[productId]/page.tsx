@@ -18,6 +18,8 @@ import {
 } from "@/lib/tr/seo/storeAddress";
 import { resolveSeoHostContext } from "@/lib/tr/seo/storefrontSeo";
 import { trBoutiqueProductPath } from "@/lib/tr/paths";
+import { isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { buildProductJsonLd, jsonLdScript } from "@/lib/tr/seo/productJsonLd";
 
 interface BoutiqueProductPageProps {
   params: Promise<{ boutiqueSlug: string; productId: string }>;
@@ -99,8 +101,38 @@ export default async function BoutiqueProductPage({
     product.boutique.slug,
   );
 
+  // Search-engine product data (price, availability, maker). Left off the atelier
+  // skin (lilabutik) until its owner asks for it.
+  const addressInput = {
+    boutiqueSlug: product.boutique.slug,
+    customDomain: product.boutique.customDomain,
+  };
+  const { slug: productSlug } = await loadSlugSeo(product.id);
+  const variantPrices = variants
+    ? (() => {
+        const prices = variants.variants.map((variant) => variant.priceKurus);
+        return prices.length > 0
+          ? { min: Math.min(...prices), max: Math.max(...prices), count: prices.length }
+          : null;
+      })()
+    : null;
+  const productJsonLd = isAtelierEditorialSkin(product.boutique.slug)
+    ? null
+    : jsonLdScript(
+        buildProductJsonLd({
+          product,
+          url: storeProductUrl({ ...addressInput, slugOrId: productSlug ?? product.id }),
+          origin: storeAddress(addressInput).origin,
+          sellerName: product.boutique.name,
+          variantPrices,
+        }),
+      );
+
   return (
     <>
+      {productJsonLd ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: productJsonLd }} />
+      ) : null}
       <TrTrackViewItem
         productId={product.id}
         name={product.title}

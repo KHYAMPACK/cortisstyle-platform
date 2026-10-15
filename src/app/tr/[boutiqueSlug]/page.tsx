@@ -24,6 +24,7 @@ export async function generateMetadata({
   const documentTitle = resolveBoutiqueDocumentTitle(
     storefront.slug,
     storefront.name,
+    storefront.editorialContent,
   );
 
   return {
@@ -34,6 +35,7 @@ export async function generateMetadata({
       storefront.slug,
       storefront.description,
       storefront.name,
+      storefront.editorialContent,
     ),
   };
 }

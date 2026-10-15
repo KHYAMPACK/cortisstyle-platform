@@ -39,10 +39,14 @@
 - [ ] `shippingFeeTry` (recommended) — flat kargo fee shoppers pay per order, in TRY (e.g. `120`). **Omit it and shoppers are not charged for shipping at all.**
 - [ ] `freeShippingMinItems` **or** `freeShippingMinSubtotalTry` — optional free-shipping threshold: orders with at least N items, or an items subtotal of at least N TRY, ship free. Set at most one. Leave both out and the fee always applies.
 
+**Page copy (optional)**
+- [ ] `editorialContent` — free-form homepage/SEO copy. `seo`: `{ "title": "…", "description": "…" }` (the browser title and search snippet). For a store on the `natural` skin: `natural`: `{ "announcement", "hero": { "eyebrow", "title", "body", "primaryLabel" }, "usps": [..], "producers": { "title", "body" }, "story": { "eyebrow", "title", "body", "ctaLabel", "ctaHref" } }` — see doc 04. Anything left out falls back to a default built from the store's name, description and categories.
+
 **Starter products (optional)**
 - [ ] `products` — array of `{ title, priceTry, sizes?, colors?, category?, images?, stock? }`. Can be left empty and added later via the panel or the batch upload flow.
 
 **Not covered by this intake — separate steps**
+- Categories: a `"fashion"` store starts with the fashion category tree. For any other kind of store replace it with `scripts/set-boutique-categories.mts` (doc 03, step 3b) before adding products.
 - Owner login: the client signs up themselves at `/giris` after the store exists. Then run `scripts/link-tr-boutique-owner.mts` to connect their account.
 - Payments (iyzico): run `scripts/set-boutique-iyzico-credentials.mts --slug <slug>` yourself with the client's API + secret key (live keys, from their iyzico merchant panel). There is no owner-facing "connect your keys" UI yet (Phase 3, not built). Until a row exists, checkout creates pending orders and the owner marks them paid by hand.
 - Legal review: these are internal templates, not legal advice — see the banner in `docs/tr-boutique-legal-templates.md`.

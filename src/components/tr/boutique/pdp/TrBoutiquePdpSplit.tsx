@@ -8,7 +8,7 @@ import { deliverPublicAssetUrls } from "@/lib/tr/assets/deliverPublicAssetUrl";
 import type { TrPublicVariants } from "@/lib/tr/variants/storefront";
 import { TrProductDetailPanel } from "@/components/tr/TrProductDetailPanel";
 import { TrProductGallery } from "@/components/tr/TrProductGallery";
-import { isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { isAtelierEditorialSkin, isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
 import { getStorefrontGalleryImages } from "@/lib/tr/productImages";
 import type { TrProductWithBoutique } from "@/types/tr-marketplace";
 
@@ -31,7 +31,10 @@ export function TrBoutiquePdpSplit({
   variants = null,
   iyzicoCheckout = false,
 }: TrBoutiquePdpSplitProps) {
-  const atelier = isAtelierEditorialSkin(product.boutique.slug);
+  // The calm skins give the page more room and put "you may also like" full width below.
+  const atelier =
+    isAtelierEditorialSkin(product.boutique.slug) ||
+    isNaturalEditorialSkin(product.boutique.slug);
   const galleryProduct = {
     ...product,
     images: getStorefrontGalleryImages(product),

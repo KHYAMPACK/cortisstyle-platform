@@ -71,11 +71,13 @@ export async function generateMetadata({
   const documentTitle = resolveBoutiqueDocumentTitle(
     boutique.slug,
     boutique.name,
+    boutique.editorialContent,
   );
   const documentDescription = resolveBoutiqueDocumentDescription(
     boutique.slug,
     boutique.description,
     boutique.name,
+    boutique.editorialContent,
   );
 
   const headerList = await headers();

@@ -49,13 +49,38 @@ export function resolveBoutiqueBrandLabel(
   return slug;
 }
 
+/**
+ * A store's own page title and description, from `editorial_content.seo`
+ * (`{ "title": "…", "description": "…" }`). Either may be missing.
+ */
+export function readSeoOverride(
+  editorialContent: Record<string, unknown> | null | undefined,
+): { title: string | null; description: string | null } {
+  const raw = editorialContent?.seo;
+  const seo =
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : {};
+  const clean = (value: unknown, max: number) => {
+    if (typeof value !== "string") return null;
+    const text = value.replace(/\s+/g, " ").trim();
+    return text ? text.slice(0, max) : null;
+  };
+  return { title: clean(seo.title, 70), description: clean(seo.description, 170) };
+}
+
 /** Full SEO title for the boutique home / default document title. */
 export function resolveBoutiqueDocumentTitle(
   slug: string,
   fallbackName?: string | null,
+  editorialContent?: Record<string, unknown> | null,
 ): string {
   const key = slug.trim().toLowerCase();
-  return DOCUMENT_TITLES[key] ?? resolveBoutiqueBrandLabel(slug, fallbackName);
+  return (
+    readSeoOverride(editorialContent).title ??
+    DOCUMENT_TITLES[key] ??
+    resolveBoutiqueBrandLabel(slug, fallbackName)
+  );
 }
 
 /** SEO meta description for boutique storefronts. */
@@ -63,8 +88,11 @@ export function resolveBoutiqueDocumentDescription(
   slug: string,
   fallbackDescription?: string | null,
   fallbackName?: string | null,
+  editorialContent?: Record<string, unknown> | null,
 ): string {
   const key = slug.trim().toLowerCase();
+  const own = readSeoOverride(editorialContent).description;
+  if (own) return own;
   const override = DOCUMENT_DESCRIPTIONS[key];
   if (override) return override;
   const fromBoutique = fallbackDescription?.trim();

@@ -1,7 +1,7 @@
 "use client";
 
 import { TrBoutiqueEditorialProductCard } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialProductCard";
-import { isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { isAtelierEditorialSkin, isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
 import type {
   TrBoutiquePublic,
   TrProductWithBoutique,
@@ -29,6 +29,29 @@ export function TrBoutiqueYouMayAlsoLike({
   if (products.length === 0) return null;
 
   const atelier = isAtelierEditorialSkin(boutique.slug);
+  const natural = isNaturalEditorialSkin(boutique.slug);
+
+  if (natural) {
+    return (
+      <section
+        aria-label={title}
+        className={`border-t border-[color:var(--nat-line)] pt-10 ${className}`}
+      >
+        <p className="nat-display mb-6 text-[1.7rem] leading-tight md:text-[2rem]">{title}</p>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-4 lg:gap-x-6">
+          {products.map((product, index) => (
+            <TrBoutiqueEditorialProductCard
+              key={product.id}
+              product={product}
+              boutiqueSlug={boutique.slug}
+              boutiqueName={boutique.name}
+              priority={index < 4}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section

@@ -1,6 +1,7 @@
 import { TrBoutiqueEditorialCatalog } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialCatalog";
 import { TrBoutiqueEditorialSections } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialSections";
-import { isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { TrBoutiqueNaturalHome } from "@/components/tr/boutique/natural/TrBoutiqueNaturalHome";
+import { isAtelierEditorialSkin, isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
 import type { TrBoutiquePublic, TrProduct } from "@/types/tr-marketplace";
 
 interface TrBoutiqueEditorialHomeProps {
@@ -13,6 +14,10 @@ export function TrBoutiqueEditorialHome({
   products,
 }: TrBoutiqueEditorialHomeProps) {
   const atelier = isAtelierEditorialSkin(boutique.slug);
+
+  if (isNaturalEditorialSkin(boutique.slug)) {
+    return <TrBoutiqueNaturalHome boutique={boutique} products={products} />;
+  }
 
   return (
     <>

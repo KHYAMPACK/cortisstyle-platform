@@ -1,5 +1,6 @@
 export {
   isAtelierEditorialSkin,
+  isNaturalEditorialSkin,
   resolveEditorialSkin,
   type TrEditorialSkinId,
 } from "@/lib/tr/boutiqueHome/editorialSkin";

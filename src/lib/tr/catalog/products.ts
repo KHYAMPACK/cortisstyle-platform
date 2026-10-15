@@ -15,6 +15,7 @@ import {
   withoutDetailColumns,
 } from "@/lib/tr/catalog/productDetailColumns";
 import { sanitizeProductFeatures } from "@/lib/tr/catalog/productFeatures";
+import { sanitizeRichHtml } from "@/lib/tr/richTextSanitize";
 import type {
   CreateTrProductInput,
   TrProduct,
@@ -155,7 +156,9 @@ export async function listPublicProductsByBoutiqueSlug(
 }
 
 const PRODUCT_SELECT_CANDIDATES: readonly string[] = [
-  // product_type tells the shop which products sell by variant (quick-add, the cart).
+  // product_type tells the shop which products sell by variant (quick-add, the cart);
+  // brand (the maker) is short and shows on cards and the maker filter.
+  `${PUBLIC_PRODUCT_COLUMNS}, product_type, brand`,
   `${PUBLIC_PRODUCT_COLUMNS}, product_type`,
   PUBLIC_PRODUCT_COLUMNS,
   `${PRODUCT_COLUMNS_CORE}, size_stocks`,
@@ -240,6 +243,18 @@ export async function listPublicProductsByBoutiqueId(
   return [];
 }
 
+/**
+ * What the product page reads for one product, richest first: the type, the maker and
+ * the rich description (one row, so the long text costs nothing). A database without a
+ * column falls back to the next set.
+ */
+const PDP_COLUMN_CANDIDATES: readonly string[] = [
+  `${PUBLIC_PRODUCT_COLUMNS}, product_type, brand, description_html`,
+  `${PUBLIC_PRODUCT_COLUMNS}, product_type`,
+  PUBLIC_PRODUCT_COLUMNS,
+  PRODUCT_COLUMNS_CORE,
+];
+
 export async function getPublicProductById(
   productId: string,
   client?: SupabaseClient,
@@ -250,22 +265,19 @@ export async function getPublicProductById(
   for (let i = 0; i < clients.length; i += 1) {
     try {
       const supabase = clients[i]!;
-      const primary = await supabase
-        .from("tr_products")
-        .select(PUBLIC_PRODUCT_COLUMNS)
-        .eq("id", productId)
-        .in("status", ["available", "sold"])
-        .maybeSingle();
-
-      const result =
-        primary.error && isMissingSizeStocksColumn(primary.error)
-          ? await supabase
-              .from("tr_products")
-              .select(PRODUCT_COLUMNS_CORE)
-              .eq("id", productId)
-              .in("status", ["available", "sold"])
-              .maybeSingle()
-          : primary;
+      let result: { data: unknown; error: { message?: string; code?: string; details?: string; hint?: string } | null } | null = null;
+      for (const columns of PDP_COLUMN_CANDIDATES) {
+        const attempt = await supabase
+          .from("tr_products")
+          .select(columns as typeof PUBLIC_PRODUCT_COLUMNS)
+          .eq("id", productId)
+          .in("status", ["available", "sold"])
+          .maybeSingle();
+        result = attempt;
+        if (!attempt.error) break;
+        if (!(missingColumnFromError(attempt.error) || isMissingColumnError(attempt.error))) break;
+      }
+      if (!result) throw new Error("Product query did not run.");
 
       if (result.error) throw result.error;
       if (!result.data) {
@@ -276,6 +288,10 @@ export async function getPublicProductById(
       const product = mapProductRow(
         result.data as unknown as Record<string, unknown>,
       );
+      // Stored text was cleaned when it was saved; clean it again before it can be shown.
+      if (product.descriptionHtml) {
+        product.descriptionHtml = sanitizeRichHtml(product.descriptionHtml);
+      }
       const boutique = await getPublicBoutiqueById(product.boutiqueId);
       if (!boutique) return null;
 

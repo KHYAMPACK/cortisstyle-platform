@@ -13,6 +13,8 @@ import { TrBoutiqueEditorialCommercePanels } from "@/components/tr/boutique/edit
 import { TrBoutiqueEditorialFooter } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialFooter";
 import { TrBoutiqueEditorialHeader } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialHeader";
 import { TrBoutiqueEditorialHelpFab } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialHelpFab";
+import { TrBoutiqueNaturalFooter } from "@/components/tr/boutique/natural/TrBoutiqueNaturalFooter";
+import { TrBoutiqueNaturalHeader } from "@/components/tr/boutique/natural/TrBoutiqueNaturalHeader";
 import {
   TrBoutiqueNavPendingProvider,
   TrBoutiquePendingMain,
@@ -99,13 +101,21 @@ function EditorialShell({
           <div
             data-editorial-skin={skin}
             className={`flex min-h-full w-full min-w-0 max-w-full flex-col overflow-x-clip text-neutral-900 ${
-              skin === "atelier" ? "bg-[#FAFAF8]" : "bg-white"
+              skin === "atelier"
+                ? "bg-[#FAFAF8]"
+                : skin === "natural"
+                  ? "bg-[color:var(--nat-paper)]"
+                  : "bg-white"
             }`}
             style={
               {
                 "--boutique-accent": accent,
                 "--boutique-sale":
-                  skin === "atelier" ? accent : "#C41E3A",
+                  skin === "atelier"
+                    ? accent
+                    : skin === "natural"
+                      ? "#A64B2A"
+                      : "#C41E3A",
                 "--brand-primary": accent,
                 "--brand-primary-hover": `color-mix(in srgb, ${accent} 82%, black)`,
                 "--brand-primary-muted": `color-mix(in srgb, ${accent} 12%, transparent)`,
@@ -113,12 +123,20 @@ function EditorialShell({
             }
           >
             <TrBoutiqueNavPendingProvider>
-              <TrBoutiqueEditorialHeader boutique={boutique} />
+              {skin === "natural" ? (
+                <TrBoutiqueNaturalHeader boutique={boutique} />
+              ) : (
+                <TrBoutiqueEditorialHeader boutique={boutique} />
+              )}
               <main className="min-w-0 flex-1 overflow-x-clip">
                 <TrBoutiquePendingMain>{children}</TrBoutiquePendingMain>
               </main>
             </TrBoutiqueNavPendingProvider>
-            <TrBoutiqueEditorialFooter boutique={boutique} />
+            {skin === "natural" ? (
+              <TrBoutiqueNaturalFooter boutique={boutique} />
+            ) : (
+              <TrBoutiqueEditorialFooter boutique={boutique} />
+            )}
             <TrBoutiqueEditorialHelpFab />
             <TrBoutiqueEditorialCommercePanels />
             <TrAddedToCartSheet />

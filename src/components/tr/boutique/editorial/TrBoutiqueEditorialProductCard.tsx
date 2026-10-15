@@ -8,7 +8,11 @@ import {
   discountPercentFromPrices,
 } from "@/components/tr/boutique/editorial/TrEditorialSaleBadge";
 import { TrBoutiquePendingLink } from "@/components/tr/boutique/editorial/TrBoutiqueNavPending";
-import { EDITORIAL_SALE_RED, isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
+import {
+  EDITORIAL_SALE_RED,
+  isAtelierEditorialSkin,
+  isNaturalEditorialSkin,
+} from "@/lib/tr/boutiqueHome";
 import { trProductPath } from "@/lib/tr/paths";
 import { resolveProductColors } from "@/lib/tr/productOptions";
 import { EMPTY_TRACKING } from "@/lib/tr/tracking/config";
@@ -57,7 +61,12 @@ export function TrBoutiqueEditorialProductCard({
     : 0;
   const productHref = trProductPath(product.id, boutiqueSlug);
   const atelier = isAtelierEditorialSkin(boutiqueSlug);
-  const saleColor = atelier ? "var(--boutique-accent)" : EDITORIAL_SALE_RED;
+  const natural = isNaturalEditorialSkin(boutiqueSlug);
+  const saleColor = atelier
+    ? "var(--boutique-accent)"
+    : natural
+      ? "var(--nat-sale)"
+      : EDITORIAL_SALE_RED;
 
   const withBoutique: TrProductWithBoutique = {
     ...product,
@@ -94,12 +103,18 @@ export function TrBoutiqueEditorialProductCard({
 
   return (
     <article
-      className={`group relative ${atelier ? "bg-transparent" : "bg-white"}`}
+      className={`group relative ${atelier || natural ? "bg-transparent" : "bg-white"}`}
     >
       <div
         className={`relative overflow-hidden ${
-          atelier ? "aspect-[3/4.2]" : "aspect-[3/4]"
-        } ${packshotIsCutout || atelier ? "bg-white" : "bg-neutral-100"}`}
+          atelier ? "aspect-[3/4.2]" : natural ? "aspect-[4/5] rounded-[2px]" : "aspect-[3/4]"
+        } ${
+          natural
+            ? "bg-[color:var(--nat-cream)]"
+            : packshotIsCutout || atelier
+              ? "bg-white"
+              : "bg-neutral-100"
+        }`}
       >
         <TrBoutiquePendingLink
           href={productHref}
@@ -216,14 +231,23 @@ export function TrBoutiqueEditorialProductCard({
             ? compact
               ? "px-0.5 pt-3 pb-1 md:px-1"
               : "px-0.5 pt-4 pb-8 md:px-1"
-            : "px-1 pt-3 pb-5 md:px-1.5"
+            : natural
+              ? "px-0.5 pt-3.5 pb-6"
+              : "px-1 pt-3 pb-5 md:px-1.5"
         }`}
       >
+        {natural && product.brand ? (
+          <p className="mb-1 truncate text-[11px] font-semibold tracking-[0.14em] text-[color:var(--nat-bark)] uppercase">
+            {product.brand}
+          </p>
+        ) : null}
         <h3
           className={`line-clamp-2 leading-snug text-neutral-900 ${
             atelier
               ? "font-serif text-[15px] font-light tracking-[0.01em] md:text-[16px]"
-              : "text-[12px] md:text-[13px]"
+              : natural
+                ? "text-[14px] font-medium md:text-[15px]"
+                : "text-[12px] md:text-[13px]"
           }`}
         >
           {product.title}
@@ -237,7 +261,7 @@ export function TrBoutiqueEditorialProductCard({
               </span>
               <span
                 className={`tracking-[-0.01em] ${
-                  atelier
+                  atelier || natural
                     ? "text-[14px] font-medium md:text-[15px]"
                     : "text-[13px] font-semibold"
                 }`}
@@ -245,14 +269,16 @@ export function TrBoutiqueEditorialProductCard({
               >
                 {formatTryFromKurus(product.priceKurus)}
               </span>
-              {!atelier && pct > 0 ? (
+              {!atelier && !natural && pct > 0 ? (
                 <TrEditorialSaleBadge percent={pct} />
               ) : null}
             </>
           ) : (
             <span
-              className={`tracking-[-0.01em] text-neutral-950 ${
-                atelier
+              className={`tracking-[-0.01em] ${
+                natural ? "text-[color:var(--nat-olive)]" : "text-neutral-950"
+              } ${
+                atelier || natural
                   ? "text-[14px] font-medium md:text-[15px]"
                   : "text-[13px] font-semibold"
               }`}
