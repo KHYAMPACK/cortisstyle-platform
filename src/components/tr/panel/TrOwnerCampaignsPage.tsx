@@ -1,11 +1,15 @@
 "use client";
 
 import { TrPanelLink as Link } from "@/components/tr/panel/TrPanelLink";
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TrOwnerPanelGate } from "@/components/tr/panel/TrOwnerPanelGate";
 import { TrCampaignTypeChooser } from "@/components/tr/panel/discounts/TrCampaignTypeChooser";
+import {
+  TrPanelDataTable,
+  TrPanelDataTableCell,
+  TrPanelDataTableRow,
+} from "@/components/tr/panel/TrPanelDataTable";
 import {
   panelBackLinkClass,
   panelEmptyClass,
@@ -17,8 +21,6 @@ import {
 import {
   TrPanelFadeIn,
   TrPanelListSkeleton,
-  TrPanelStagger,
-  trPanelStaggerItem,
 } from "@/components/tr/panel/TrPanelMotion";
 import {
   fetchOwnerDiscountCampaigns,
@@ -90,29 +92,34 @@ function CampaignsList({ boutiqueId }: { boutiqueId: string }) {
         </div>
       ) : (
         <TrPanelFadeIn>
-          <div className="overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            <ul className="divide-y divide-neutral-100">
-              {campaigns.map((campaign) => (
-                <li
+          <TrPanelDataTable headers={["Kampanya", "İndirim", "Durum"]}>
+            {campaigns.map((campaign) => {
+              const href = trPanelEditCampaignPath(campaign.id);
+              return (
+                <TrPanelDataTableRow
                   key={campaign.id}
-                  onClick={() => router.push(trPanelEditCampaignPath(campaign.id))}
-                  onPointerEnter={() =>
-                    router.prefetch(trPanelEditCampaignPath(campaign.id))
-                  }
-                  className="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors duration-150 hover:bg-[color:var(--panel-accent-soft)]/60 motion-reduce:transition-none"
+                  onActivate={() => router.push(href)}
+                  onPointerEnter={() => router.prefetch(href)}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-[14px] font-semibold text-neutral-900">
-                      {campaign.title}
-                    </p>
-                    <p className="mt-0.5 text-[13px] text-neutral-500">
-                      {campaign.kind === "automatic" ? "Otomatik İndirim" : "İndirim Kodu"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <TrPanelDataTableCell>
+                    <div className="min-w-0">
+                      <Link
+                        href={href}
+                        className="max-w-[320px] truncate font-semibold text-neutral-900 hover:underline"
+                      >
+                        {campaign.title}
+                      </Link>
+                      <p className="truncate text-[12px] text-neutral-500">
+                        {campaign.kind === "automatic" ? "Otomatik İndirim" : "İndirim Kodu"}
+                      </p>
+                    </div>
+                  </TrPanelDataTableCell>
+                  <TrPanelDataTableCell>
                     <span className="rounded-lg bg-[color:var(--panel-accent-soft)] px-2.5 py-1 text-[13px] font-semibold text-neutral-800">
                       {campaignSummary(campaign)}
                     </span>
+                  </TrPanelDataTableCell>
+                  <TrPanelDataTableCell>
                     <span
                       className={`rounded-lg px-2.5 py-1 text-[13px] font-semibold ${
                         campaign.active
@@ -122,11 +129,11 @@ function CampaignsList({ boutiqueId }: { boutiqueId: string }) {
                     >
                       {campaign.active ? "Aktif" : "Pasif"}
                     </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  </TrPanelDataTableCell>
+                </TrPanelDataTableRow>
+              );
+            })}
+          </TrPanelDataTable>
         </TrPanelFadeIn>
       )}
 
@@ -199,33 +206,43 @@ function ProductSalesList({ boutiqueId }: { boutiqueId: string }) {
       ) : onSale.length === 0 ? (
         <p className={panelEmptyClass}>Aktif ürün indirimi yok.</p>
       ) : (
-        <TrPanelStagger className="space-y-3">
-          {onSale.map((product) => (
-            <motion.div key={product.id} variants={trPanelStaggerItem}>
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[color:var(--panel-accent-border)] bg-white p-4 shadow-sm sm:p-5">
-                <Link href={trPanelEditProductPath(product.id)} className="min-w-0 flex-1">
-                  <p className="text-[16px] font-semibold text-neutral-900">{product.title}</p>
-                  <p className="mt-1 text-[14px] text-neutral-600">
+        <TrPanelFadeIn>
+          <TrPanelDataTable headers={["Ürün", "Fiyat", ""]}>
+            {onSale.map((product) => {
+              const href = trPanelEditProductPath(product.id);
+              return (
+                <TrPanelDataTableRow key={product.id}>
+                  <TrPanelDataTableCell>
+                    <Link
+                      href={href}
+                      className="max-w-[320px] truncate font-semibold text-neutral-900 hover:underline"
+                    >
+                      {product.title}
+                    </Link>
+                  </TrPanelDataTableCell>
+                  <TrPanelDataTableCell>
                     {formatTryFromKurus(product.priceKurus)}
                     {product.compareAtPriceKurus ? (
                       <span className="ml-2 text-neutral-400 line-through">
                         {formatTryFromKurus(product.compareAtPriceKurus)}
                       </span>
                     ) : null}
-                  </p>
-                </Link>
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={() => void clearSale(product)}
-                  className={panelSecondaryBtnClass}
-                >
-                  İndirimi kaldır
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </TrPanelStagger>
+                  </TrPanelDataTableCell>
+                  <TrPanelDataTableCell className="text-right">
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => void clearSale(product)}
+                      className={panelSecondaryBtnClass}
+                    >
+                      İndirimi kaldır
+                    </button>
+                  </TrPanelDataTableCell>
+                </TrPanelDataTableRow>
+              );
+            })}
+          </TrPanelDataTable>
+        </TrPanelFadeIn>
       )}
     </section>
   );

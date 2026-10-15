@@ -155,19 +155,23 @@ export function TrPanelEditorSave({
     <TrPanelEditorActions>
       {saving ? (
         <span
-          className="hidden items-center gap-2 text-white/70 sm:inline-flex"
+          className="hidden items-center gap-2 text-[13.5px] text-white/70 sm:inline-flex"
           role="status"
         >
           <TrPanelBusySpinner />
           Kaydediliyor…
         </span>
       ) : dirty ? (
-        <span className="hidden text-amber-300 sm:inline" role="status">
+        <span
+          className="hidden items-center gap-2 text-[13.5px] font-medium text-amber-300 sm:inline-flex"
+          role="status"
+        >
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" aria-hidden />
           Kaydedilmemiş değişiklikler
         </span>
       ) : saved ? (
         <span
-          className="hidden items-center gap-1.5 text-emerald-300 sm:inline-flex"
+          className="hidden items-center gap-1.5 text-[13.5px] text-emerald-300 sm:inline-flex"
           role="status"
         >
           <Check className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -178,7 +182,7 @@ export function TrPanelEditorSave({
         type="button"
         onClick={onSave}
         disabled={!canSave}
-        className="inline-flex h-9 items-center rounded-lg bg-[color:var(--panel-accent)] px-4 text-[13px] font-semibold text-white transition-[background-color,opacity] duration-150 hover:bg-[color:var(--panel-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 disabled:pointer-events-none disabled:opacity-50 motion-reduce:transition-none"
+        className="inline-flex h-10 items-center rounded-lg bg-[color:var(--panel-accent)] px-7 text-[14px] font-semibold text-white shadow-sm transition-[background-color,transform,box-shadow] duration-150 hover:bg-[color:var(--panel-accent-hover)] hover:shadow active:scale-[0.98] active:bg-[color:var(--panel-accent-active)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none lg:h-11 lg:px-9 lg:text-[15px] motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         {label}
       </button>
