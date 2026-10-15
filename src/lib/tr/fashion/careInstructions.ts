@@ -139,9 +139,13 @@ const CARE_BY_CATEGORY: Record<string, TrCareGuide> = {
 
 const GENERIC_CARE: TrCareGuide = DELICATE_APPAREL;
 
-export function getCareInstructions(
+/**
+ * The care guide written for this category, or `null` when it has none — i.e. the
+ * product is probably not a garment, and the generic apparel guide would be wrong.
+ */
+export function findCareInstructions(
   categoryId: string | null | undefined,
-): TrCareGuide {
+): TrCareGuide | null {
   const raw = categoryId?.trim();
   if (raw && CARE_BY_CATEGORY[raw]) return CARE_BY_CATEGORY[raw]!;
 
@@ -155,5 +159,11 @@ export function getCareInstructions(
     if (copy) return copy;
   }
 
-  return GENERIC_CARE;
+  return null;
+}
+
+export function getCareInstructions(
+  categoryId: string | null | undefined,
+): TrCareGuide {
+  return findCareInstructions(categoryId) ?? GENERIC_CARE;
 }

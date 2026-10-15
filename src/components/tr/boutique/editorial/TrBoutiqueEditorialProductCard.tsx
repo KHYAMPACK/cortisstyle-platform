@@ -11,6 +11,7 @@ import { TrBoutiquePendingLink } from "@/components/tr/boutique/editorial/TrBout
 import { EDITORIAL_SALE_RED, isAtelierEditorialSkin } from "@/lib/tr/boutiqueHome";
 import { trProductPath } from "@/lib/tr/paths";
 import { resolveProductColors } from "@/lib/tr/productOptions";
+import { EMPTY_TRACKING } from "@/lib/tr/tracking/config";
 import {
   getProductCoverImageFor,
   getProductHoverImage,
@@ -76,6 +77,10 @@ export function TrBoutiqueEditorialProductCard({
       physicalAddress: null,
       customDomain: null,
       vergiNo: null,
+      vergiDairesi: null,
+      mersisNo: null,
+      kepAddress: null,
+      tracking: EMPTY_TRACKING,
       editorialContent: null,
       contactEmail: null,
       shippingFeeKurus: 0,

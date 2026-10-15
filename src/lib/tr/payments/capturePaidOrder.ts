@@ -91,6 +91,15 @@ export async function captureBoutiqueOrderAsPaid(input: {
     console.error("[tr/payments] owner push after paid failed:", notifyError);
   }
 
+  // Both e-mails swallow their own errors — a mail problem never fails a paid order.
+  const { sendOrderConfirmationEmailSafe, sendOwnerNewOrderEmailSafe } = await import(
+    "@/lib/tr/orderMail/sendOrderEmails"
+  );
+  await Promise.all([
+    sendOrderConfirmationEmailSafe(input.orderId),
+    sendOwnerNewOrderEmailSafe(input.orderId),
+  ]);
+
   await autoFulfillPaidShipment(input.boutique, input.orderId);
   return "paid";
 }

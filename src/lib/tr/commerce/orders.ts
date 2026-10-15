@@ -273,6 +273,11 @@ export async function createOrderAdmin(
         });
       }),
     );
+    // Same moment, same condition: the owner's e-mail copy of the push alert.
+    const { sendOwnerNewOrderEmailSafe } = await import(
+      "@/lib/tr/orderMail/sendOrderEmails"
+    );
+    await sendOwnerNewOrderEmailSafe(order.id);
   }
 
   return {

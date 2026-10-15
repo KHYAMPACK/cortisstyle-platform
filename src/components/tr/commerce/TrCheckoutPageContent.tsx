@@ -16,6 +16,10 @@ import {
   cartHasDemoItems,
 } from "@/components/tr/TrSandboxBanner";
 import { TrIyzicoCheckoutBadge } from "@/components/tr/TrIyzicoPaymentBadges";
+import { useTrackingActive } from "@/components/tr/boutique/TrTrackingEvents";
+import { kurusToTry } from "@/lib/tr/tracking/events";
+import { cartLineToTrackedItem } from "@/lib/tr/tracking/items";
+import { trackEvent } from "@/lib/tr/tracking/runtime";
 import { TrFreeShippingNudge } from "@/components/tr/commerce/TrFreeShippingNudge";
 import { TrCheckoutAddressPicker } from "@/components/tr/commerce/TrCheckoutAddressPicker";
 import {
@@ -251,6 +255,21 @@ function TrCheckoutForm({
     list.push("address", "review");
     return list;
   }, [needsContact]);
+
+  // Ad / analytics: the shopper reached checkout with these items (once per visit).
+  const trackingActive = useTrackingActive();
+  const beginCheckoutSent = useRef(false);
+  useEffect(() => {
+    if (!trackingActive || !hydrated || items.length === 0 || beginCheckoutSent.current) {
+      return;
+    }
+    beginCheckoutSent.current = true;
+    trackEvent({
+      type: "begin_checkout",
+      valueTry: kurusToTry(cartTotalKurus(items)),
+      items: items.map(cartLineToTrackedItem),
+    });
+  }, [trackingActive, hydrated, items]);
 
   useEffect(() => {
     if (isInitializing) return;

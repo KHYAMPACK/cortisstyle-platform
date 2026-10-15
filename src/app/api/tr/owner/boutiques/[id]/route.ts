@@ -7,12 +7,49 @@ import {
   updateBoutiqueBrandAdmin,
   type UpdateTrBoutiqueBrandInput,
 } from "@/lib/tr/boutiques";
+import {
+  normalizeContactEmail,
+  normalizeKepAddress,
+  normalizeMersisNo,
+  normalizeVergiDairesi,
+} from "@/lib/tr/company";
 import { validateShippingSettings } from "@/lib/tr/shipping/settings";
+import { readTrackingInput } from "@/lib/tr/tracking/config";
+import type { TrBoutique } from "@/types/tr-marketplace";
 
 export const runtime = "nodejs";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
+}
+
+/** What the owner's Ayarlar page sees of a store. */
+function settingsPayload(boutique: TrBoutique) {
+  return {
+    id: boutique.id,
+    slug: boutique.slug,
+    name: boutique.name,
+    legalName: boutique.legalName,
+    description: boutique.description,
+    logoUrl: boutique.logoUrl,
+    whatsappPhone: boutique.whatsappPhone,
+    instagramHandle: boutique.instagramHandle,
+    shippingNote: boutique.shippingNote,
+    exchangePolicy: boutique.exchangePolicy,
+    physicalAddress: boutique.physicalAddress,
+    themeAccent: boutique.themeAccent,
+    vergiNo: boutique.vergiNo,
+    vergiDairesi: boutique.vergiDairesi,
+    mersisNo: boutique.mersisNo,
+    kepAddress: boutique.kepAddress,
+    contactEmail: boutique.contactEmail,
+    tracking: boutique.tracking,
+    iban: boutique.iban,
+    shippingFeeKurus: boutique.shippingFeeKurus,
+    freeShippingMinItems: boutique.freeShippingMinItems,
+    freeShippingMinSubtotalKurus: boutique.freeShippingMinSubtotalKurus,
+    status: boutique.status,
+  };
 }
 
 /**
@@ -34,28 +71,7 @@ export async function GET(request: Request, context: RouteContext) {
     return Response.json({ error: "Butik bulunamadı." }, { status: 404 });
   }
 
-  return Response.json({
-    boutique: {
-      id: boutique.id,
-      slug: boutique.slug,
-      name: boutique.name,
-      legalName: boutique.legalName,
-      description: boutique.description,
-      logoUrl: boutique.logoUrl,
-      whatsappPhone: boutique.whatsappPhone,
-      instagramHandle: boutique.instagramHandle,
-      shippingNote: boutique.shippingNote,
-      exchangePolicy: boutique.exchangePolicy,
-      physicalAddress: boutique.physicalAddress,
-      themeAccent: boutique.themeAccent,
-      vergiNo: boutique.vergiNo,
-      iban: boutique.iban,
-      shippingFeeKurus: boutique.shippingFeeKurus,
-      freeShippingMinItems: boutique.freeShippingMinItems,
-      freeShippingMinSubtotalKurus: boutique.freeShippingMinSubtotalKurus,
-      status: boutique.status,
-    },
-  });
+  return Response.json({ boutique: settingsPayload(boutique) });
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -106,6 +122,28 @@ export async function PATCH(request: Request, context: RouteContext) {
   const iban = stringOrNull(body.iban);
   if (iban !== undefined) patch.iban = iban;
 
+  // Checked here (not just where they're saved) so a typo answers 400 with a sentence.
+  try {
+    const contactEmail = stringOrNull(body.contactEmail);
+    if (contactEmail !== undefined) {
+      patch.contactEmail = normalizeContactEmail(contactEmail);
+    }
+    const vergiDairesi = stringOrNull(body.vergiDairesi);
+    if (vergiDairesi !== undefined) {
+      patch.vergiDairesi = normalizeVergiDairesi(vergiDairesi);
+    }
+    const mersisNo = stringOrNull(body.mersisNo);
+    if (mersisNo !== undefined) patch.mersisNo = normalizeMersisNo(mersisNo);
+    const kepAddress = stringOrNull(body.kepAddress);
+    if (kepAddress !== undefined) patch.kepAddress = normalizeKepAddress(kepAddress);
+    if (body.tracking !== undefined) patch.tracking = readTrackingInput(body.tracking);
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Geçersiz değer." },
+      { status: 400 },
+    );
+  }
+
   const shipping = validateShippingSettings({
     shippingFeeKurus: body.shippingFeeKurus,
     freeShippingMinItems: body.freeShippingMinItems,
@@ -118,28 +156,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
   try {
     const boutique = await updateBoutiqueBrandAdmin(id, patch);
-    return Response.json({
-      boutique: {
-        id: boutique.id,
-        slug: boutique.slug,
-        name: boutique.name,
-        legalName: boutique.legalName,
-        description: boutique.description,
-        logoUrl: boutique.logoUrl,
-        whatsappPhone: boutique.whatsappPhone,
-        instagramHandle: boutique.instagramHandle,
-        shippingNote: boutique.shippingNote,
-        exchangePolicy: boutique.exchangePolicy,
-        physicalAddress: boutique.physicalAddress,
-        themeAccent: boutique.themeAccent,
-        vergiNo: boutique.vergiNo,
-        iban: boutique.iban,
-        shippingFeeKurus: boutique.shippingFeeKurus,
-        freeShippingMinItems: boutique.freeShippingMinItems,
-        freeShippingMinSubtotalKurus: boutique.freeShippingMinSubtotalKurus,
-        status: boutique.status,
-      },
-    });
+    return Response.json({ boutique: settingsPayload(boutique) });
   } catch (error) {
     console.error("[tr/owner/boutiques/[id]] patch failed:", error);
     return Response.json(

@@ -1,36 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import {
+  consentNoticeVisible,
+  readCookieConsentRaw,
+  subscribeCookieConsent,
+  writeCookieConsent,
+} from "@/lib/tr/tracking/consent";
 
-const STORAGE_KEY = "cortis-tr-boutique-cookie-consent";
+/** On the server the visitor's choice is unknown, so nothing is shown until hydration. */
+const UNKNOWN = Symbol("unknown");
 
+/**
+ * A store that loads no ad / analytics tags only needs the one-button "Anladım"
+ * notice about essential cookies. One that does (`usesTracking`) has to ask first:
+ * "Tümünü kabul et" lets its tags load, "Yalnızca zorunlu" keeps them off.
+ */
 export function TrBoutiqueCookieNotice({
   privacyHref,
+  usesTracking = false,
 }: {
   privacyHref: string;
+  usesTracking?: boolean;
 }) {
-  const [visible, setVisible] = useState(false);
+  const stored = useSyncExternalStore<string | null | typeof UNKNOWN>(
+    subscribeCookieConsent,
+    readCookieConsentRaw,
+    () => UNKNOWN,
+  );
 
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(STORAGE_KEY) === "1") return;
-      setVisible(true);
-    } catch {
-      setVisible(true);
-    }
-  }, []);
-
-  if (!visible) return null;
-
-  const accept = () => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      // ignore
-    }
-    setVisible(false);
-  };
+  if (stored === UNKNOWN || !consentNoticeVisible(stored, usesTracking)) return null;
 
   return (
     <div
@@ -39,19 +39,33 @@ export function TrBoutiqueCookieNotice({
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12px] leading-relaxed text-neutral-700">
-          Bu sitede zorunlu çerezler kullanılır. Detaylar için{" "}
+          {usesTracking
+            ? "Bu sitede zorunlu çerezlerin yanı sıra, onayınızla analiz ve reklam çerezleri kullanılır. "
+            : "Bu sitede zorunlu çerezler kullanılır. "}
+          Detaylar için{" "}
           <Link href={privacyHref} className="underline underline-offset-2">
             çerez politikası
           </Link>
           .
         </p>
-        <button
-          type="button"
-          onClick={accept}
-          className="shrink-0 bg-neutral-900 px-4 py-2.5 text-[11px] tracking-[0.14em] text-white uppercase"
-        >
-          Anladım
-        </button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {usesTracking ? (
+            <button
+              type="button"
+              onClick={() => writeCookieConsent("essential")}
+              className="border border-neutral-900 px-4 py-2.5 text-[11px] tracking-[0.14em] text-neutral-900 uppercase"
+            >
+              Yalnızca zorunlu
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => writeCookieConsent(usesTracking ? "all" : "essential")}
+            className="bg-neutral-900 px-4 py-2.5 text-[11px] tracking-[0.14em] text-white uppercase"
+          >
+            {usesTracking ? "Tümünü kabul et" : "Anladım"}
+          </button>
+        </div>
       </div>
     </div>
   );

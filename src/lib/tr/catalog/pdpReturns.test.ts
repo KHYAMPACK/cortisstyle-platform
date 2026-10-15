@@ -86,6 +86,33 @@ describe("getPdpDeliverySummary", () => {
     ]);
   });
 
+  it("doesn't send a store without a WhatsApp number to WhatsApp", () => {
+    const summary = getPdpDeliverySummary({
+      slug: "ornek",
+      name: "Örnek",
+      shippingFeeKurus: 0,
+      freeShippingMinItems: null,
+      freeShippingMinSubtotalKurus: null,
+      whatsappPhone: null,
+    });
+    const text = JSON.stringify(summary.paragraphs);
+    assert.doesNotMatch(text, /WhatsApp/);
+    assert.match(text, /e-posta ile yazmanız yeterlidir/);
+    assert.match(text, /Değişim için bize yazın/);
+    // A store that does have one keeps the exact wording above.
+    const withWhatsapp = JSON.stringify(
+      getPdpDeliverySummary({
+        slug: "ornek",
+        name: "Örnek",
+        shippingFeeKurus: 0,
+        freeShippingMinItems: null,
+        freeShippingMinSubtotalKurus: null,
+        whatsappPhone: "905551112233",
+      }).paragraphs,
+    );
+    assert.match(withWhatsapp, /WhatsApp/);
+  });
+
   it("handles a missing boutique", () => {
     const summary = getPdpDeliverySummary(null);
     assert.equal(summary.legalHref, null);

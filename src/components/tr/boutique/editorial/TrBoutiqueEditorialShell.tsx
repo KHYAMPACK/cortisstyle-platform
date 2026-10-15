@@ -8,6 +8,7 @@ import {
 } from "@/components/tr/boutique/TrBoutiqueTaxonomy";
 import { TrBoutiqueCommerceScopeProvider } from "@/components/tr/boutique/TrBoutiqueCommerceScope";
 import { TrBoutiqueCookieNotice } from "@/components/tr/boutique/TrBoutiqueCookieNotice";
+import { TrBoutiqueTracker } from "@/components/tr/boutique/TrBoutiqueTracker";
 import { TrBoutiqueEditorialCommercePanels } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialCommercePanels";
 import { TrBoutiqueEditorialFooter } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialFooter";
 import { TrBoutiqueEditorialHeader } from "@/components/tr/boutique/editorial/TrBoutiqueEditorialHeader";
@@ -21,6 +22,7 @@ import { TrAddedToCartSheet } from "@/components/tr/TrAddedToCartSheet";
 import { resolveBoutiqueThemeAccent } from "@/lib/tr/boutiqueBrand";
 import { resolveEditorialSkin } from "@/lib/tr/boutiqueHome";
 import { trBoutiqueLegalPath } from "@/lib/tr/paths";
+import { hasTracking } from "@/lib/tr/tracking/config";
 import type { TrTaxonomyNode } from "@/lib/tr/categories/taxonomy";
 import type { TrBoutiquePublic, TrProduct } from "@/types/tr-marketplace";
 
@@ -122,7 +124,9 @@ function EditorialShell({
             <TrAddedToCartSheet />
             <TrBoutiqueCookieNotice
               privacyHref={trBoutiqueLegalPath(boutique.slug, "cerez")}
+              usesTracking={hasTracking(boutique.tracking)}
             />
+            <TrBoutiqueTracker tracking={boutique.tracking} />
           </div>
         </TrBoutiqueCatalogProvider>
       </TrBoutiqueProductsProvider>

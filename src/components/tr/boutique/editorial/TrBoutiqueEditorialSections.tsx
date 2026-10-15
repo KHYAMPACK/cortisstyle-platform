@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -120,16 +121,13 @@ export function TrBoutiqueEditorialSections({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           className="flex w-full min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-2 px-4 py-2.5 text-center text-white"
-          style={{
-            background:
-              "linear-gradient(90deg, #1a0a10 0%, #3b0f24 40%, #C2185B 70%, #3b0f24 100%)",
-          }}
+          style={{ background: accent }}
         >
           <p className="text-[10px] tracking-[0.12em] uppercase sm:text-[11px] md:text-[12px]">
             {content.promoBar.text}
           </p>
           <Link
-            href={saleHref}
+            href={productsHref}
             className="editorial-promo-cta border border-white/90 bg-white/10 px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase backdrop-blur-sm transition-colors hover:bg-white hover:text-neutral-950"
           >
             {content.promoBar.cta}
@@ -168,7 +166,18 @@ export function TrBoutiqueEditorialSections({
                 href={categoryHref(panel.categoryId)}
                 className="group relative min-h-[48vw] overflow-hidden sm:min-h-[42vw] md:min-h-[68vh]"
               >
-                <EditorialPlaceholder tone={index} />
+                {panel.image ? (
+                  <Image
+                    src={panel.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <EditorialPlaceholder tone={index} />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-5 pb-8 text-center text-white md:pb-14">
                   <p className="text-xl font-semibold tracking-[0.14em] uppercase md:text-4xl">
@@ -193,7 +202,18 @@ export function TrBoutiqueEditorialSections({
                 href={categoryHref(tile.categoryId)}
                 className="group relative min-h-[42vw] overflow-hidden sm:aspect-auto sm:min-h-[48vh]"
               >
-                <EditorialPlaceholder tone={index + 2} />
+                {tile.image ? (
+                  <Image
+                    src={tile.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 640px) 33vw, 100vw"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <EditorialPlaceholder tone={index + 2} />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 flex flex-col items-center px-4 pb-7 text-center text-white">
                   <p className="text-lg font-semibold tracking-[0.16em] uppercase md:text-2xl">
@@ -218,23 +238,27 @@ export function TrBoutiqueEditorialSections({
               </Link>
             </p>
 
-            <h2 className="mt-10 text-center text-xl font-semibold tracking-tight text-neutral-900 md:text-2xl">
-              {content.instagram.title}
-            </h2>
+            {content.instagram.handle ? (
+              <>
+                <h2 className="mt-10 text-center text-xl font-semibold tracking-tight text-neutral-900 md:text-2xl">
+                  {content.instagram.title}
+                </h2>
 
-            <div className="-mx-5 mt-6 flex gap-2 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:px-0">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <a
-                  key={`ig-ph-${index}`}
-                  href={instagramProfileUrl(content.instagram.handle)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative aspect-square w-[38vw] shrink-0 overflow-hidden sm:w-[30vw] md:w-auto"
-                >
-                  <EditorialPlaceholder tone={index} />
-                </a>
-              ))}
-            </div>
+                <div className="-mx-5 mt-6 flex gap-2 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-5 md:gap-3 md:overflow-visible md:px-0">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <a
+                      key={`ig-ph-${index}`}
+                      href={instagramProfileUrl(content.instagram.handle)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative aspect-square w-[38vw] shrink-0 overflow-hidden sm:w-[30vw] md:w-auto"
+                    >
+                      <EditorialPlaceholder tone={index} />
+                    </a>
+                  ))}
+                </div>
+              </>
+            ) : null}
           </motion.section>
 
           <motion.section

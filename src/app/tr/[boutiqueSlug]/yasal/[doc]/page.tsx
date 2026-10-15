@@ -8,6 +8,7 @@ import {
 } from "@/lib/tr/legal/docs";
 import { trBoutiquePath } from "@/lib/tr/paths";
 import { safeGetPublicBoutique } from "@/lib/tr/publicData";
+import { trackingToolNames } from "@/lib/tr/tracking/config";
 
 interface LegalPageProps {
   params: Promise<{ boutiqueSlug: string; doc: string }>;
@@ -38,8 +39,10 @@ export default async function BoutiqueLegalPage({ params }: LegalPageProps) {
     shippingNote: boutique.shippingNote,
     customDomain: boutique.customDomain,
     vergiNo: boutique.vergiNo,
-    kepAddress: null,
-    mersisNo: null,
+    vergiDairesi: boutique.vergiDairesi,
+    kepAddress: boutique.kepAddress,
+    mersisNo: boutique.mersisNo,
+    trackingTools: trackingToolNames(boutique.tracking),
     marketingEnabled: true,
   };
 

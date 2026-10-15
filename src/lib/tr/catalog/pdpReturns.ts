@@ -37,9 +37,16 @@ export function getPdpDeliverySummary(
     | "shippingFeeKurus"
     | "freeShippingMinItems"
     | "freeShippingMinSubtotalKurus"
-  > | null,
+  > &
+    // A store known to have no WhatsApp number must not be told to "write on WhatsApp".
+    Partial<Pick<TrBoutiquePublic, "whatsappPhone">> | null,
 ): TrPdpDeliverySummary {
   const boutiqueSlug = boutique?.slug ?? null;
+  const phone = boutique?.whatsappPhone;
+  const noWhatsapp = phone !== undefined && !(phone ?? "").trim();
+  const writeUs = noWhatsapp
+    ? "Sipariş numaranızla bize e-posta ile yazmanız yeterlidir."
+    : "WhatsApp’tan sipariş numaranızla yazmanız yeterlidir.";
   const legalHref = boutiqueSlug
     ? trBoutiqueLegalPath(boutiqueSlug, "iade")
     : null;
@@ -98,11 +105,13 @@ export function getPdpDeliverySummary(
       "Teslimden itibaren ",
       strong("14 gün"),
       carrier
-        ? " içinde cayma hakkınızı kullanabilirsiniz. WhatsApp’tan sipariş numaranızla yazmanız yeterlidir. Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz. Ürünü kullanılmamış ve orijinal ambalajında gönderin."
-        : " içinde cayma hakkınızı kullanabilirsiniz. WhatsApp’tan sipariş numaranızla yazmanız yeterlidir. Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz.",
+        ? ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz. Ürünü kullanılmamış ve orijinal ambalajında gönderin.`
+        : ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz.`,
     ),
     paragraph(
-      "Beden veya model değişimi için WhatsApp’tan yazın. Talepler ",
+      noWhatsapp
+        ? "Değişim için bize yazın. Talepler "
+        : "Beden veya model değişimi için WhatsApp’tan yazın. Talepler ",
       strong("stok durumuna göre"),
       " değerlendirilir.",
     ),

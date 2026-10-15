@@ -1,7 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseAdmin";
 import { getPublicCatalogSupabase } from "@/lib/supabase/supabaseServer";
+import {
+  normalizeContactEmail,
+  normalizeKepAddress,
+  normalizeMersisNo,
+  normalizeVergiDairesi,
+} from "@/lib/tr/company";
 import { mapBoutiqueRow, toPublicBoutique } from "@/lib/tr/mappers";
+import {
+  hasTracking,
+  trackingToJson,
+  type TrBoutiqueTracking,
+} from "@/lib/tr/tracking/config";
 import type {
   CreateTrBoutiqueInput,
   TrBoutique,
@@ -9,8 +20,25 @@ import type {
   TrBoutiqueStatus,
 } from "@/types/tr-marketplace";
 
-export const PUBLIC_BOUTIQUE_COLUMNS =
-  "id, slug, name, legal_name, description, logo_url, whatsapp_phone, instagram_handle, theme_accent, shipping_note, exchange_policy, physical_address, custom_domain, editorial_content, catalog_profile, vergi_no, contact_email, status, created_at, updated_at, shipping_fee_kurus, free_shipping_min_items, free_shipping_min_subtotal_kurus";
+/**
+ * Everything the view exposes. The view only ever holds public-safe columns, so `*`
+ * is no wider than a column list — and it keeps the storefront working whether or not
+ * `patch_tr_boutiques_company_and_tracking.sql` (which appends columns) has been applied.
+ */
+export const PUBLIC_BOUTIQUE_COLUMNS = "*";
+
+/** The columns `patch_tr_boutiques_company_and_tracking.sql` adds. */
+const COMPANY_TRACKING_COLUMNS = [
+  "vergi_dairesi",
+  "mersis_no",
+  "kep_address",
+  "tracking",
+] as const;
+
+function isMissingColumn(error: { code?: string; message?: string }): boolean {
+  if (["42703", "PGRST204"].includes(error.code ?? "")) return true;
+  return /does not exist|schema cache|could not find/i.test(error.message ?? "");
+}
 
 /** Prefer this view once `patch_tr_boutiques_public_view.sql` is applied (anon-safe). */
 export const PUBLIC_BOUTIQUE_VIEW = "tr_boutiques_public";
@@ -33,6 +61,20 @@ function boutiqueInsertRow(input: CreateTrBoutiqueInput) {
     catalog_profile:
       input.catalogProfile === "custom_art" ? "custom_art" : "fashion",
     vergi_no: input.vergiNo?.trim() ?? null,
+    // Only written when given, so creating a store never depends on
+    // `patch_tr_boutiques_company_and_tracking.sql`.
+    ...(normalizeVergiDairesi(input.vergiDairesi)
+      ? { vergi_dairesi: normalizeVergiDairesi(input.vergiDairesi) }
+      : {}),
+    ...(normalizeMersisNo(input.mersisNo)
+      ? { mersis_no: normalizeMersisNo(input.mersisNo) }
+      : {}),
+    ...(normalizeKepAddress(input.kepAddress)
+      ? { kep_address: normalizeKepAddress(input.kepAddress) }
+      : {}),
+    ...(input.tracking && hasTracking(input.tracking)
+      ? { tracking: trackingToJson(input.tracking) }
+      : {}),
     iban: input.iban?.trim() ?? null,
     commission_bps: input.commissionBps ?? 1000,
     shipping_fee_kurus: input.shippingFeeKurus ?? 0,
@@ -235,6 +277,11 @@ export interface UpdateTrBoutiqueBrandInput {
   vergiNo?: string | null;
   iban?: string | null;
   contactEmail?: string | null;
+  /** Company details for the künye page — see `lib/tr/company.ts` for the cleaning rules. */
+  vergiDairesi?: string | null;
+  mersisNo?: string | null;
+  kepAddress?: string | null;
+  tracking?: TrBoutiqueTracking;
 }
 
 export async function updateBoutiqueBrandAdmin(
@@ -300,7 +347,19 @@ export async function updateBoutiqueBrandAdmin(
     row.iban = input.iban?.replace(/\s/g, "").toUpperCase().trim() || null;
   }
   if (input.contactEmail !== undefined) {
-    row.contact_email = input.contactEmail?.trim().toLowerCase() || null;
+    row.contact_email = normalizeContactEmail(input.contactEmail);
+  }
+  if (input.vergiDairesi !== undefined) {
+    row.vergi_dairesi = normalizeVergiDairesi(input.vergiDairesi);
+  }
+  if (input.mersisNo !== undefined) {
+    row.mersis_no = normalizeMersisNo(input.mersisNo);
+  }
+  if (input.kepAddress !== undefined) {
+    row.kep_address = normalizeKepAddress(input.kepAddress);
+  }
+  if (input.tracking !== undefined) {
+    row.tracking = trackingToJson(input.tracking);
   }
 
   if (Object.keys(row).length === 0) {
@@ -309,15 +368,47 @@ export async function updateBoutiqueBrandAdmin(
     return existing;
   }
 
-  const { data, error } = await supabase
+  const first = await supabase
     .from("tr_boutiques")
     .update(row)
     .eq("id", boutiqueId)
     .select("*")
     .single();
+  if (!first.error) return mapBoutiqueRow(first.data as Record<string, unknown>);
 
-  if (error) throw error;
+  // Before the company/tracking patch is applied those columns don't exist. Save the
+  // rest, and only complain if something was actually entered in the new fields — a
+  // form that simply sends them empty must keep working.
+  const touchesNewColumns = COMPANY_TRACKING_COLUMNS.some((column) => column in row);
+  if (!isMissingColumn(first.error) || !touchesNewColumns) throw first.error;
 
-  return mapBoutiqueRow(data as Record<string, unknown>);
+  const enteredNewValue = COMPANY_TRACKING_COLUMNS.some((column) => {
+    const value = row[column];
+    if (value === undefined || value === null) return false;
+    if (column === "tracking") return Object.keys(value as object).length > 0;
+    return true;
+  });
+  const rest = { ...row };
+  for (const column of COMPANY_TRACKING_COLUMNS) delete rest[column];
+
+  let saved: TrBoutique | null = null;
+  if (Object.keys(rest).length > 0) {
+    const retry = await supabase
+      .from("tr_boutiques")
+      .update(rest)
+      .eq("id", boutiqueId)
+      .select("*")
+      .single();
+    if (retry.error) throw retry.error;
+    saved = mapBoutiqueRow(retry.data as Record<string, unknown>);
+  }
+  if (enteredNewValue) {
+    throw new Error(
+      "Şirket ve takip alanları kaydedilemedi: veritabanı güncellemesi (patch_tr_boutiques_company_and_tracking.sql) henüz uygulanmamış.",
+    );
+  }
+  const current = saved ?? (await getBoutiqueByIdAdmin(boutiqueId));
+  if (!current) throw new Error("Boutique not found.");
+  return current;
 }
 

@@ -2,6 +2,8 @@
 
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist } from "zustand/middleware";
+import { cartLineToTrackedItem } from "@/lib/tr/tracking/items";
+import { trackEvent } from "@/lib/tr/tracking/runtime";
 import { sameCartLine, type TrCartLineItem } from "@/types/tr-cart";
 
 interface TrBoutiqueLocalCartStore {
@@ -30,6 +32,7 @@ function cartApi(set: (partial: { items: TrCartLineItem[] }) => void, get: () =>
         return false;
       }
       set({ items: [...get().items, item] });
+      trackEvent({ type: "add_to_cart", item: cartLineToTrackedItem(item) });
       return true;
     },
     removeItem: (productId: string, size?: string | null, variantId?: string | null) => {

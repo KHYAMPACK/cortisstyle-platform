@@ -4,7 +4,14 @@ import {
   updateBoutiqueBrandAdmin,
   updateBoutiqueStatusAdmin,
 } from "@/lib/tr/boutiques";
+import {
+  normalizeContactEmail,
+  normalizeKepAddress,
+  normalizeMersisNo,
+  normalizeVergiDairesi,
+} from "@/lib/tr/company";
 import { createDiscountCodeAdmin } from "@/lib/tr/discountCodes";
+import { readTrackingInput } from "@/lib/tr/tracking/config";
 import {
   liraToKurus,
   validateShippingSettings,
@@ -27,6 +34,12 @@ interface SeedBoutiquePayload {
   name: string;
   legalName?: string;
   vergiNo?: string;
+  /** Tax office, MERSİS number and KEP address — shown on the künye page. */
+  vergiDairesi?: string;
+  mersisNo?: string;
+  kepAddress?: string;
+  /** Ad / analytics IDs: metaPixelId, ga4Id, gtmId, googleAdsId, googleAdsPurchaseLabel. */
+  tracking?: Record<string, unknown>;
   iban?: string;
   contactEmail?: string;
   description?: string;
@@ -136,6 +149,22 @@ export async function POST(request: Request) {
       );
     }
     shippingBySlug.set(input.slug, result.value);
+
+    // Company details and tracking IDs: a typo is a clear 400 here, not a 500 mid-seed.
+    try {
+      normalizeVergiDairesi(input.vergiDairesi);
+      normalizeMersisNo(input.mersisNo);
+      normalizeKepAddress(input.kepAddress);
+      normalizeContactEmail(input.contactEmail);
+      if (input.tracking !== undefined) readTrackingInput(input.tracking);
+    } catch (error) {
+      return Response.json(
+        {
+          error: `${input.slug}: ${error instanceof Error ? error.message : "Geçersiz değer."}`,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   try {
@@ -167,6 +196,13 @@ export async function POST(request: Request) {
             catalogProfile: boutiqueInput.catalogProfile,
             legalName: boutiqueInput.legalName,
             vergiNo: boutiqueInput.vergiNo,
+            vergiDairesi: boutiqueInput.vergiDairesi,
+            mersisNo: boutiqueInput.mersisNo,
+            kepAddress: boutiqueInput.kepAddress,
+            tracking:
+              boutiqueInput.tracking === undefined
+                ? undefined
+                : readTrackingInput(boutiqueInput.tracking),
             iban: boutiqueInput.iban,
             contactEmail: boutiqueInput.contactEmail,
             ...shipping,
@@ -176,6 +212,13 @@ export async function POST(request: Request) {
             name: boutiqueInput.name,
             legalName: boutiqueInput.legalName,
             vergiNo: boutiqueInput.vergiNo,
+            vergiDairesi: boutiqueInput.vergiDairesi,
+            mersisNo: boutiqueInput.mersisNo,
+            kepAddress: boutiqueInput.kepAddress,
+            tracking:
+              boutiqueInput.tracking === undefined
+                ? undefined
+                : readTrackingInput(boutiqueInput.tracking),
             iban: boutiqueInput.iban,
             contactEmail: boutiqueInput.contactEmail,
             description: boutiqueInput.description,

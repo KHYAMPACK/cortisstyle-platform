@@ -30,6 +30,8 @@ export async function sendPlatformEmail(input: {
   text: string;
   /** Optional From display name; address stays on the platform domain. */
   fromName?: string;
+  /** Where a reply goes — a store's own support address, since the sender is the platform's. */
+  replyTo?: string;
 }): Promise<void> {
   const apiKey = getResendApiKey();
   if (!apiKey) {
@@ -53,6 +55,7 @@ export async function sendPlatformEmail(input: {
     subject: input.subject,
     html: input.html,
     text: input.text,
+    ...(input.replyTo?.trim() ? { replyTo: input.replyTo.trim() } : {}),
   });
 
   if (error) {

@@ -179,7 +179,21 @@ Checkout's discount-code path (`checkoutValidate.ts`) now looks up `tr_discount_
 
 `src/lib/tr/payments/registry.ts` is the read path for "does this boutique take card payments and with what credentials" — `boutiqueOffersIyzicoCheckout()`, `getIyzicoBuyerProtection()`, `getIyzicoCredentials()`. Purely DB-backed: reads `tr_boutique_integrations` (credentials AES-256-GCM encrypted via `credentialEncryption.ts`) and returns `null`/`false` if no row exists. There is no env-var fallback — that legacy path (`IYZICO_CHECKOUT_SLUGS`, `IYZICO_BUYER_PROTECTION_BY_SLUG`, `CREDENTIAL_ENV_BY_SLUG`) was removed once lilabutik's real credentials were migrated into the table and verified against live production checkout (2026-09-23). A boutique with no `tr_boutique_integrations` row simply doesn't offer iyzico checkout — that's not a bug to route around, it's the correct state until someone adds a row (`scripts/migrate-lilabutik-iyzico-credentials.mts` is a worked example of how, though it's slug-specific and would need generalizing for a second boutique).
 
+**Connecting a boutique's own iyzico account** (a client who has their own merchant account): `scripts/set-boutique-iyzico-credentials.mts` — generic, takes `--slug`, prompts for the two keys at a hidden prompt (never as arguments, never printed), checks them against iyzico (`iyzicoCheckCredentials` in `iyzicoClient.ts`; sandbox and live keys differ), encrypts, writes the `tr_boutique_integrations` row, reads it back the way checkout will. The header comment of the script is the runbook (`vercel env pull` → `--dry-run` → write → delete the env file). **Whoever holds the client's keys runs it** — keep live keys out of chat and out of agent sessions.
+
 Checkout iyzico flow: `src/app/api/tr/checkout/iyzico/{start,abandon,callback}/route.ts`.
+
+## Order e-mails
+
+`src/lib/tr/orderMail/` — `templates.ts` (pure HTML/text builders, reusing the auth-mail shell and `escapeHtml`), `mapOrder.ts` (order row → template input, pure), `sendOrderEmails.ts` (fire-and-forget senders). A **customer confirmation** goes out once an order is paid (`capturePaidOrder.ts` for iyzico; the checkout route for non-iyzico/sandbox orders), and the **owner gets a "yeni sipariş" mail** next to the existing web push (`orders.ts#createOrderAdmin`, dynamic import after the push). They send through `sendPlatformEmail` (Resend, `RESEND_API_KEY`) from `noreply@cortisstyle.com` with the **store name as display name** and the store's contact e-mail as `replyTo` — so a client's replies reach the client, not the platform. Failures are swallowed and logged: an order must never fail because a mail did. There is no "kargoya verildi" mail yet.
+
+## Conversion tracking & cookie consent
+
+Per-boutique ad/analytics tags live in `tr_boutiques.tracking` (jsonb; `TrBoutiqueTracking` in `types/tr-marketplace.ts`; set in Ayarlar → *Reklam ve analiz*, in the intake as `tracking`, or by `updateBoutiqueBrandAdmin`). Supported: GTM container, GA4 measurement id, Meta pixel, Google Ads conversion (`AW-…` + label). Pure, tested logic is in `src/lib/tr/tracking/` (`config.ts` validation/normalisation, `events.ts` GA4/Meta/Ads event shapes, `consent.ts`, `items.ts` cart-line → item, `runtime.ts` loader + dispatcher). Components: `TrBoutiqueTracker` (mounted in the editorial shell; injects scripts only after consent), `TrTrackingEvents` (`TrTrackViewItem` on the PDP, `TrPurchaseTracker` on `siparis-onay` for paid, non-sandbox orders — de-duplicated per order). Events: `page_view`, `view_item`, `add_to_cart` (cart store), `begin_checkout`, `purchase`. **Nothing loads until the visitor chooses "Tümünü kabul et"** in `TrBoutiqueCookieNotice` (choices: *Yalnızca zorunlu* / *Tümünü kabul et*; storage key `cortis-tr-boutique-cookie-consent`; a boutique with no tracking configured keeps the old info-only banner). With a `gtmId` set, `loadTrackingTags` skips the direct GA4/Google Ads loading (GTM carries those; events go to `dataLayer` in GA4 shape) but still loads the Meta pixel directly — don't also add the Meta pixel inside GTM or it counts twice.
+
+## Company details (künye / legal pages)
+
+`tr_boutiques` also carries `vergi_dairesi`, `mersis_no`, `kep_address` (with `vergi_no`, `legal_name`, `physical_address`), edited in Ayarlar and rendered by `legal/docs.ts` on the künye, mesafeli satış, ön bilgilendirme and KVKK pages. `src/lib/tr/company.ts` normalises/validates the new ones (vergi dairesi ≤ 80 chars, MERSİS exactly 16 digits, KEP and contact e-mail shape); `vergi_no` is stored as typed. All of this — plus the tracking column — arrives with **`supabase/patch_tr_boutiques_company_and_tracking.sql`** (one transaction, also recreates `tr_boutiques_public`; Mert applies it). Until it is applied every read/write here is tolerant: `updateBoutiqueBrandAdmin` retries without the new columns and only throws if a non-empty new value was actually entered.
 
 ## Code map
 
@@ -210,7 +224,10 @@ Checkout iyzico flow: `src/app/api/tr/checkout/iyzico/{start,abandon,callback}/r
 | Discount campaigns (M1–M4, complete) | `src/lib/tr/discounts/{types,campaignRules,codeRules}.ts`, `src/lib/tr/catalog/{discountCampaigns,discountCampaignApi,discountCampaignCodes}.ts`, `src/lib/tr/panel/campaignForm.ts`, `src/app/api/tr/owner/discount-campaigns/` (incl. `[id]/codes/`), `src/components/tr/panel/TrOwnerCampaignsPage.tsx`, `discounts/{TrDiscountCampaignEditor,TrOwnerDiscountCampaignEditorPage,TrCampaignTypeChooser,TrCampaignProductPicker,TrCampaignCouponsCard,TrCampaignAddCodeModal}.tsx`, `useOwnerProducts.ts`, `src/app/tr/panel/kampanyalar/`, `supabase/{patch_discount_campaigns,patch_discount_campaign_usage}.sql` — checkout wiring (M3/M4) lives under Checkout above |
 | Discount codes (old MVP, dead except the admin seed route — see M4 notes) | `src/lib/tr/discountCodes.ts` |
 | Shipping | `src/lib/tr/shipping/quoteShipping.ts`, `shippingCopy.ts`, `settings.ts` (fee rules); `registry.ts` (carrier integration) |
-| Payments | `src/lib/tr/payments/registry.ts` |
+| Payments | `src/lib/tr/payments/registry.ts`, `scripts/set-boutique-iyzico-credentials.mts` (connect a boutique's own keys) |
+| Order e-mails | `src/lib/tr/orderMail/{templates,mapOrder,sendOrderEmails}.ts` |
+| Tracking & consent | `src/lib/tr/tracking/`, `src/components/tr/boutique/{TrBoutiqueTracker,TrTrackingEvents,TrBoutiqueCookieNotice}.tsx` |
+| Company details | `src/lib/tr/company.ts`, `src/lib/tr/legal/docs.ts`, `supabase/patch_tr_boutiques_company_and_tracking.sql` |
 
 ## Related
 

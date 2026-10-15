@@ -1,6 +1,7 @@
 import type { TrFashionProductFeatures } from "@/lib/tr/fashion/types";
 import type { TrCustomArtProductFeatures } from "@/lib/tr/customArt/types";
 import type { TrSeo } from "@/lib/tr/seo/seoFields";
+import type { TrBoutiqueTracking } from "@/lib/tr/tracking/config";
 
 export type TrBoutiqueStatus = "draft" | "pending" | "verified" | "suspended";
 export type TrProductStatus = "available" | "sold" | "hidden";
@@ -83,6 +84,14 @@ export interface TrBoutiquePublic {
   customDomain: string | null;
   /** Tax id for künye / legal pages (not IBAN). */
   vergiNo: string | null;
+  /** Tax office, shown next to the tax id on the künye page and contracts. */
+  vergiDairesi: string | null;
+  /** MERSİS number for the künye page. */
+  mersisNo: string | null;
+  /** KEP (registered e-mail) address for the künye page. */
+  kepAddress: string | null;
+  /** The store's ad / analytics IDs (public identifiers only). */
+  tracking: TrBoutiqueTracking;
   /** Editorial homepage JSON; null → code defaults for that boutique. */
   editorialContent: Record<string, unknown> | null;
   /** Vertical: fashion catalog vs print-on-demand custom art. */
@@ -423,6 +432,10 @@ export interface CreateTrBoutiqueInput {
   editorialContent?: Record<string, unknown> | null;
   catalogProfile?: TrCatalogProfileId;
   vergiNo?: string | null;
+  vergiDairesi?: string | null;
+  mersisNo?: string | null;
+  kepAddress?: string | null;
+  tracking?: TrBoutiqueTracking;
   iban?: string | null;
   commissionBps?: number;
   shippingFeeKurus?: number;

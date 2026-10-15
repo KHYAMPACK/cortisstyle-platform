@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState, type FormEvent } from "react";
 import { TrOwnerPanelGate } from "@/components/tr/panel/TrOwnerPanelGate";
 import { TrOwnerPushNotificationsCard } from "@/components/tr/panel/TrOwnerPushNotificationsCard";
+import { TrPanelImageField } from "@/components/tr/panel/TrPanelImageField";
 import {
   panelBackLinkClass,
   panelFieldClass,
@@ -44,7 +45,17 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
   const [physicalAddress, setPhysicalAddress] = useState("");
   const [legalName, setLegalName] = useState("");
   const [vergiNo, setVergiNo] = useState("");
+  const [vergiDairesi, setVergiDairesi] = useState("");
+  const [mersisNo, setMersisNo] = useState("");
+  const [kepAddress, setKepAddress] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [iban, setIban] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [metaPixelId, setMetaPixelId] = useState("");
+  const [ga4Id, setGa4Id] = useState("");
+  const [gtmId, setGtmId] = useState("");
+  const [googleAdsId, setGoogleAdsId] = useState("");
+  const [googleAdsPurchaseLabel, setGoogleAdsPurchaseLabel] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +77,16 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
         setPhysicalAddress(result.physicalAddress ?? "");
         setLegalName(result.legalName ?? "");
         setVergiNo(result.vergiNo ?? "");
+        setVergiDairesi(result.vergiDairesi ?? "");
+        setMersisNo(result.mersisNo ?? "");
+        setKepAddress(result.kepAddress ?? "");
+        setContactEmail(result.contactEmail ?? "");
         setIban(result.iban ?? "");
+        setMetaPixelId(result.tracking?.metaPixelId ?? "");
+        setGa4Id(result.tracking?.ga4Id ?? "");
+        setGtmId(result.tracking?.gtmId ?? "");
+        setGoogleAdsId(result.tracking?.googleAdsId ?? "");
+        setGoogleAdsPurchaseLabel(result.tracking?.googleAdsPurchaseLabel ?? "");
       } catch (loadError) {
         if (!cancelled) {
           setError(
@@ -103,7 +123,18 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
         physicalAddress: physicalAddress.trim() || null,
         legalName: legalName.trim() || null,
         vergiNo: vergiNo.trim() || null,
+        vergiDairesi: vergiDairesi.trim() || null,
+        mersisNo: mersisNo.trim() || null,
+        kepAddress: kepAddress.trim() || null,
+        contactEmail: contactEmail.trim() || null,
         iban: iban.trim() || null,
+        tracking: {
+          metaPixelId: metaPixelId.trim() || null,
+          ga4Id: ga4Id.trim() || null,
+          gtmId: gtmId.trim() || null,
+          googleAdsId: googleAdsId.trim() || null,
+          googleAdsPurchaseLabel: googleAdsPurchaseLabel.trim() || null,
+        },
       });
       setSettings(updated);
       setSaved(true);
@@ -158,16 +189,37 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
           />
         </label>
 
+        <div className="space-y-2">
+          <TrPanelImageField
+            boutiqueId={boutiqueId}
+            label="Logo"
+            value={logoUrl.trim() || null}
+            onChange={(url) => setLogoUrl(url ?? "")}
+            onError={(message) => setError(message)}
+            onUploadingChange={setUploadingLogo}
+            disabled={saving}
+          />
+          <p className={panelHintClass}>
+            PNG yükleyin: giriş ve sipariş e-postalarında da bu logo kullanılır, SVG
+            çoğu e-posta uygulamasında görünmez.
+          </p>
+        </div>
+
         <label className="block space-y-2">
           <span className={panelLabelClass}>
-            Logo URL
+            İletişim e-postası
           </span>
           <input
-            value={logoUrl}
-            onChange={(event) => setLogoUrl(event.target.value)}
+            type="email"
+            value={contactEmail}
+            onChange={(event) => setContactEmail(event.target.value)}
             className={panelFieldClass}
-            placeholder="/tr/boutiques/.../logo.svg"
+            placeholder="destek@firmaniz.com"
+            autoComplete="off"
           />
+          <span className={panelHintClass}>
+            Mağazada ve sözleşmelerde görünür; sipariş e-postalarına yanıt bu adrese gider.
+          </span>
         </label>
 
         <label className="block space-y-2">
@@ -285,6 +337,43 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
           </label>
           <label className="block space-y-2">
             <span className={panelLabelClass}>
+              Vergi dairesi
+            </span>
+            <input
+              value={vergiDairesi}
+              onChange={(event) => setVergiDairesi(event.target.value)}
+              className={panelFieldClass}
+              placeholder="Örn. Pamukkale"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>
+              MERSİS no (şirketler için, 16 hane)
+            </span>
+            <input
+              value={mersisNo}
+              onChange={(event) => setMersisNo(event.target.value)}
+              className={panelFieldClass}
+              inputMode="numeric"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>
+              KEP adresi
+            </span>
+            <input
+              type="email"
+              value={kepAddress}
+              onChange={(event) => setKepAddress(event.target.value)}
+              className={panelFieldClass}
+              placeholder="firma@hs01.kep.tr"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>
               IBAN
             </span>
             <input
@@ -292,6 +381,71 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
               onChange={(event) => setIban(event.target.value)}
               className={panelFieldClass}
               placeholder="TR…"
+              autoComplete="off"
+            />
+          </label>
+        </div>
+
+        <div className="space-y-4 border border-black/10 bg-neutral-50 px-4 py-4">
+          <div>
+            <p className={panelLabelClass}>
+              Reklam ve analiz kodları
+            </p>
+            <p className="mt-1 text-[12px] text-neutral-600">
+              Boş bırakılan kod yüklenmez. Kodlar yalnızca çerez uyarısında “Tümünü
+              kabul et” diyen ziyaretçilerde çalışır. Google Tag Manager
+              kullanıyorsanız GA4 ve Google Ads etiketlerini GTM içinden yönetin;
+              aynı etiketi hem burada hem GTM’de tanımlamayın (çift sayım olur).
+            </p>
+          </div>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>Meta Pixel ID</span>
+            <input
+              value={metaPixelId}
+              onChange={(event) => setMetaPixelId(event.target.value)}
+              className={panelFieldClass}
+              inputMode="numeric"
+              placeholder="1234567890123456"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>Google Analytics 4 ölçüm kimliği</span>
+            <input
+              value={ga4Id}
+              onChange={(event) => setGa4Id(event.target.value)}
+              className={panelFieldClass}
+              placeholder="G-ABCDE12345"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>Google Tag Manager kimliği</span>
+            <input
+              value={gtmId}
+              onChange={(event) => setGtmId(event.target.value)}
+              className={panelFieldClass}
+              placeholder="GTM-ABC1234"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>Google Ads kimliği</span>
+            <input
+              value={googleAdsId}
+              onChange={(event) => setGoogleAdsId(event.target.value)}
+              className={panelFieldClass}
+              placeholder="AW-123456789"
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2">
+            <span className={panelLabelClass}>Google Ads satın alma dönüşüm etiketi</span>
+            <input
+              value={googleAdsPurchaseLabel}
+              onChange={(event) => setGoogleAdsPurchaseLabel(event.target.value)}
+              className={panelFieldClass}
+              placeholder="AbC-dEfGhIjKlMn"
               autoComplete="off"
             />
           </label>
@@ -326,7 +480,7 @@ function SettingsForm({ boutiqueId }: { boutiqueId: string }) {
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || uploadingLogo}
           className={`${panelPrimaryBtnClass} w-full gap-3`}
         >
           {saving ? (

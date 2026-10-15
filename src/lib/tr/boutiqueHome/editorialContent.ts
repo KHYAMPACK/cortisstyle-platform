@@ -226,12 +226,109 @@ export function buildBoutiqueEditorialDefaults(
 /** The parts of the boutique's category system the editorial defaults are built from. */
 export type EditorialTaxonomy = Pick<TrStorefrontTaxonomy, "roots" | "imageUrl">;
 
+/** The longest welcome line a default hero shows (a store description can run long). */
+const WELCOME_LINE_MAX = 90;
+
+/**
+ * A classic-skin store that hasn't written its own homepage gets one built from its
+ * own data — its categories, name, description and shipping rules — instead of the
+ * fashion demo (Elbise / Üst giyim… and the demo-maya stock photos). Anything the
+ * store does author in `editorial_content` still wins over these (it is merged on top).
+ * Not used for the atelier skin, whose content is already taxonomy-owned.
+ */
+export function buildDataDrivenDefaults(
+  base: EditorialDemoContent,
+  boutique: Pick<
+    TrBoutiquePublic,
+    | "name"
+    | "description"
+    | "instagramHandle"
+    | "whatsappPhone"
+    | "shippingFeeKurus"
+    | "freeShippingMinItems"
+    | "freeShippingMinSubtotalKurus"
+  >,
+  taxonomy: EditorialTaxonomy,
+): EditorialDemoContent {
+  const roots = taxonomy.roots();
+  const panel = (root: { id: string; label: string }, cta: string) => ({
+    categoryId: root.id,
+    label: root.label,
+    // Only the category's own picture — never a stock photo. Empty = the placeholder.
+    image: taxonomy.imageUrl(root.id) ?? "",
+    cta,
+  });
+  const shippingBody = shippingHomeBody(shippingFeeConfigOf(boutique));
+  const description = boutique.description?.trim() ?? "";
+  const handle = boutique.instagramHandle?.replace(/^@/, "").trim() ?? "";
+
+  return {
+    ...base,
+    nav: [
+      { id: "new", label: "Yeni", categoryId: null },
+      ...roots.map((root) => ({ id: root.id, label: root.label, categoryId: root.id })),
+      { id: "sale", label: "İndirim", categoryId: "sale", accent: "sale" as const },
+    ],
+    promoBar: {
+      text: shippingBody || `${boutique.name} mağazasına hoş geldiniz`,
+      cta: "Alışverişe başla",
+    },
+    // The single-slide fallback is never used (there is always a welcome slide below),
+    // but it must not keep pointing at a stock photo either.
+    categoryHero: { ...base.categoryHero, image: "" },
+    heroPromotions: [
+      {
+        id: "welcome",
+        template: "campaign",
+        promoLine: "Hoş geldiniz",
+        discountLine: "Koleksiyonu keşfedin",
+        subText: description
+          ? description.length > WELCOME_LINE_MAX
+            ? `${description.slice(0, WELCOME_LINE_MAX - 1).trimEnd()}…`
+            : description
+          : "Hoş geldiniz",
+        campaignName: "Koleksiyonu keşfedin",
+        actions: buildMainCategoryCampaignActions(
+          { shopAllLabel: "Tüm ürünler", shopAllTarget: "all" },
+          taxonomy,
+        ),
+        ...(shippingBody ? { subText2: [shippingBody] } : {}),
+        cta: "Tüm ürünler",
+        target: "all",
+      },
+    ],
+    featuredPair: roots.slice(0, 2).map((root) => panel(root, "Hemen keşfet")),
+    categoryTiles: roots.slice(2, 8).map((root) => panel(root, "Ürünleri incele")),
+    highlight: {
+      body: `${boutique.name} koleksiyonunu keşfedin.`,
+      cta: "Tüm ürünler",
+    },
+    // No handle, no Instagram strip (it would link to the wrong profile).
+    instagram: { title: base.instagram.title, handle, images: [] },
+    // No "yakında" placeholders on a real store: the shipping line comes from its rules,
+    // and is left out when it has none.
+    usps: [
+      { id: "secure", label: "Güvenli Alışveriş", icon: "secure" },
+      { id: "customers", label: "Müşteri Memnuniyeti", icon: "customers" },
+      ...(shippingBody ? [{ id: "shipping", label: shippingBody, icon: "shipping" as const }] : []),
+      { id: "payment", label: "Sipariş kaydı", icon: "payment" },
+    ],
+    footer: {
+      ...base.footer,
+      phone: boutique.whatsappPhone ? base.footer.phone : "",
+    },
+  };
+}
+
 /** `taxonomy` is the boutique's categories (`useStorefrontTaxonomy()` in components). */
 export function getEditorialContent(
   boutique: TrBoutiquePublic,
   taxonomy: EditorialTaxonomy,
 ): EditorialDemoContent {
-  const defaults = buildBoutiqueEditorialDefaults(boutique);
+  const atelier = isAtelierEditorialSkin(boutique.slug);
+  const defaults = atelier
+    ? buildBoutiqueEditorialDefaults(boutique)
+    : buildDataDrivenDefaults(buildBoutiqueEditorialDefaults(boutique), boutique, taxonomy);
 
   const merged = mergeEditorial(defaults, boutique.editorialContent);
 
@@ -242,7 +339,6 @@ export function getEditorialContent(
       : defaults.heroPromotions;
 
   // Atelier nav + hero CTA packs + shop category row are taxonomy-owned (avoids DB drift).
-  const atelier = isAtelierEditorialSkin(boutique.slug);
   const nav = atelier ? buildAtelierTaxonomyNav(taxonomy) : merged.nav;
   const heroPromotions = atelier
     ? buildAtelierHeroPromotions(

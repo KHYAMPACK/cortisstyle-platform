@@ -5,6 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import {
   CARE_ROW_LABELS,
+  findCareInstructions,
   getCareInstructions,
   type TrCareGuide,
 } from "@/lib/tr/fashion/careInstructions";
@@ -32,6 +33,14 @@ export function TrBoutiquePdpInfoSections({
   const featureRows = listProductFeatureRows(product.features, {
     color: formatColorLabel(resolveProductColors(product)),
   });
+  // Garment care text only makes sense for garments: fashion products and legacy
+  // rows (no product type) keep it; "simple" products never get it; "advanced" ones
+  // only when their category has a care guide of its own.
+  const showCare =
+    product.productType === "fashion" ||
+    product.productType === undefined ||
+    (product.productType === "advanced" &&
+      findCareInstructions(product.category) !== null);
   const care = getCareInstructions(product.category);
   const delivery = getPdpDeliverySummary(
     product.boutique,
@@ -56,9 +65,11 @@ export function TrBoutiquePdpInfoSections({
         </section>
       ) : null}
 
-      <PdpAccordion title="İçerik ve Bakım" rule={rule} defaultOpen>
-        <CareGuideList care={care} />
-      </PdpAccordion>
+      {showCare ? (
+        <PdpAccordion title="İçerik ve Bakım" rule={rule} defaultOpen>
+          <CareGuideList care={care} />
+        </PdpAccordion>
+      ) : null}
 
       <PdpAccordion title="Teslimat ve İade" rule={rule} defaultOpen>
         <div className="space-y-3 text-[13px] leading-relaxed text-neutral-800">

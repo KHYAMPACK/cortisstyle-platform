@@ -21,6 +21,7 @@ import type {
   TrCategoryListEntry,
   TrProductCategories,
 } from "@/lib/tr/categories/types";
+import type { TrBoutiqueTracking } from "@/lib/tr/tracking/config";
 import type {
   TrDiscountCampaign,
   TrDiscountCampaignCode,
@@ -1666,6 +1667,12 @@ export interface TrOwnerBoutiqueSettings {
   physicalAddress: string | null;
   themeAccent: string | null;
   vergiNo: string | null;
+  vergiDairesi: string | null;
+  mersisNo: string | null;
+  kepAddress: string | null;
+  /** Support address shown to shoppers; reply-to of order e-mails. */
+  contactEmail: string | null;
+  tracking: TrBoutiqueTracking;
   iban: string | null;
   status: string;
 }
@@ -1704,6 +1711,11 @@ export async function updateOwnerBoutiqueSettings(
       | "themeAccent"
       | "legalName"
       | "vergiNo"
+      | "vergiDairesi"
+      | "mersisNo"
+      | "kepAddress"
+      | "contactEmail"
+      | "tracking"
       | "iban"
     >
   >,

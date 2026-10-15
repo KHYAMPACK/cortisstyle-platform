@@ -17,6 +17,7 @@ import type {
 } from "@/types/tr-marketplace";
 import { sanitizeProductFeatures } from "@/lib/tr/catalog/productFeatures";
 import { sanitizeSeo } from "@/lib/tr/seo/seoFields";
+import { readTrackingConfig } from "@/lib/tr/tracking/config";
 import { isUnitType } from "@/lib/tr/productUnits";
 import { readSizeStocks } from "@/lib/tr/sizeStocks";
 import {
@@ -131,6 +132,10 @@ export function mapBoutiqueRow(row: Record<string, unknown>): TrBoutique {
         ? row.free_shipping_min_subtotal_kurus
         : null,
     vergiNo: (row.vergi_no as string | null) ?? null,
+    vergiDairesi: (row.vergi_dairesi as string | null) ?? null,
+    mersisNo: (row.mersis_no as string | null) ?? null,
+    kepAddress: (row.kep_address as string | null) ?? null,
+    tracking: readTrackingConfig(row.tracking),
     iban: (row.iban as string | null) ?? null,
     commissionBps: (row.commission_bps as number) ?? 1000,
     ownerUserId: (row.owner_user_id as string | null) ?? null,
@@ -160,6 +165,10 @@ export function toPublicBoutique(boutique: TrBoutique): TrBoutiquePublic {
     physicalAddress: boutique.physicalAddress,
     customDomain: boutique.customDomain,
     vergiNo: boutique.vergiNo,
+    vergiDairesi: boutique.vergiDairesi,
+    mersisNo: boutique.mersisNo,
+    kepAddress: boutique.kepAddress,
+    tracking: boutique.tracking,
     editorialContent: boutique.editorialContent,
     catalogProfile: boutique.catalogProfile,
     contactEmail: boutique.contactEmail,

@@ -70,7 +70,7 @@ export function resolveBoutiqueDocumentDescription(
   const fromBoutique = fallbackDescription?.trim();
   if (fromBoutique) return fromBoutique;
   const brand = resolveBoutiqueBrandLabel(slug, fallbackName);
-  return `${brand} — shop women's clothing online.`;
+  return `${brand} — online alışveriş. Ürünleri inceleyin, güvenle sipariş verin.`;
 }
 
 /** Boutiques with logo or accent get the branded shell. */

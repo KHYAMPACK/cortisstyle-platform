@@ -7,6 +7,7 @@ import {
   type CheckoutClientItem,
 } from "@/lib/tr/checkoutValidate";
 import { createOrderConfirmToken } from "@/lib/tr/orderConfirmToken";
+import { sendOrderConfirmationEmailSafe } from "@/lib/tr/orderMail/sendOrderEmails";
 import { isTrCheckoutSandboxMode } from "@/lib/tr/checkoutMode";
 import {
   normalizeBuyerTaxId,
@@ -253,6 +254,9 @@ export async function POST(request: Request) {
       } catch (campaignError) {
         console.error("[tr/checkout] campaign usage increment failed:", campaignError);
       }
+      // No card payment to wait for: the order is final now. (A card order's
+      // confirmation goes out when iyzico reports it paid — capturePaidOrder.)
+      await sendOrderConfirmationEmailSafe(order.id);
     }
 
     const confirmToken = createOrderConfirmToken(order.id);

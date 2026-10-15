@@ -23,6 +23,7 @@ import { resolve } from "node:path";
 const RECOMMENDED_FIELDS = [
   "legalName",
   "vergiNo",
+  "vergiDairesi",
   "contactEmail",
   "whatsappPhone",
   "physicalAddress",
@@ -58,6 +59,12 @@ interface BoutiqueIntake {
   name: string;
   legalName?: string;
   vergiNo?: string;
+  /** Tax office, MERSİS number (16 digits) and KEP address — shown on the künye page. */
+  vergiDairesi?: string;
+  mersisNo?: string;
+  kepAddress?: string;
+  /** Ad / analytics IDs: metaPixelId, ga4Id, gtmId, googleAdsId, googleAdsPurchaseLabel. */
+  tracking?: Record<string, string>;
   iban?: string;
   contactEmail?: string;
   description?: string;

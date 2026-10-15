@@ -6,6 +6,7 @@ import { boutiqueOffersIyzicoCheckout } from "@/lib/tr/payments/registry";
 import { boutiqueHasCarrierIntegration } from "@/lib/tr/shipping/registry";
 import { shippingFeeConfigOf } from "@/lib/tr/shipping/quoteShipping";
 import { freeShippingPromoCopy, tlLabel } from "@/lib/tr/shipping/shippingCopy";
+import { trackingToolNames } from "@/lib/tr/tracking/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,6 +105,7 @@ export async function GET(
     ["legalName", boutique.legalName],
     ["physicalAddress", boutique.physicalAddress],
     ["vergiNo", boutique.vergiNo],
+    ["vergiDairesi", boutique.vergiDairesi],
     ["whatsappPhone", boutique.whatsappPhone],
   ];
   const missingLegal = legalFields
@@ -117,6 +119,35 @@ export async function GET(
       missingLegal.length === 0
         ? "all set"
         : `missing: ${missingLegal.join(", ")}`,
+  });
+
+  // 4b. Company registry details — MERSİS / KEP apply to companies; informational.
+  checks.push({
+    id: "company_registry",
+    label: "MERSİS / KEP on the künye page",
+    ok: true,
+    detail:
+      [
+        boutique.mersisNo ? "MERSİS set" : "no MERSİS",
+        boutique.kepAddress ? "KEP set" : "no KEP",
+      ].join(", ") + " (companies should have both)",
+  });
+
+  // 4c. Logo — shown in the header and in auth/order e-mails. Informational.
+  checks.push({
+    id: "logo",
+    label: "Logo set",
+    ok: Boolean(boutique.logoUrl?.trim()),
+    detail: boutique.logoUrl?.trim() || "no logo — the header shows the name only",
+  });
+
+  // 4d. Ad / analytics tags — informational.
+  const tools = trackingToolNames(boutique.tracking);
+  checks.push({
+    id: "tracking",
+    label: "Ad / analytics tags configured",
+    ok: true,
+    detail: tools.length > 0 ? tools.join(", ") : "none — no conversion tracking",
   });
 
   // 5. Payment mode — informational, not a blocker either way.

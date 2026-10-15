@@ -94,6 +94,38 @@ export type IyzicoRetrieveResult = {
   mdStatus?: string | number;
 };
 
+/**
+ * Whether iyzico accepts these keys: a read-only installment lookup that only
+ * succeeds with a valid signature. Used by the onboarding script so a mistyped key
+ * is caught before the client's first order, never at checkout time.
+ */
+export async function iyzicoCheckCredentials(
+  creds: TrIyzicoCredentials,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const result = await iyzicoPost<{ status?: string; errorMessage?: string }>(
+      creds,
+      "/payment/iyzipos/installment",
+      {
+        locale: "tr",
+        conversationId: "credential-check",
+        binNumber: "554960",
+        price: "100.0",
+      },
+    );
+    if (result.status === "success") return { ok: true };
+    return {
+      ok: false,
+      message: result.errorMessage ?? "iyzico anahtarları kabul etmedi.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "iyzico'ya ulaşılamadı.",
+    };
+  }
+}
+
 export async function iyzicoInitializeCheckoutForm(
   creds: TrIyzicoCredentials,
   body: JsonRecord,

@@ -52,7 +52,7 @@ export function resolveBoutiqueAuthMailBrand(
   return { name, logoAbsoluteUrl };
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -60,7 +60,8 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
-function shell(input: {
+/** The branded frame every store e-mail shares (auth codes, order confirmations, …). */
+export function shell(input: {
   brand: BoutiqueAuthMailBrand;
   title: string;
   bodyHtml: string;

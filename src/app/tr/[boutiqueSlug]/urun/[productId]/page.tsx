@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
+import { TrTrackViewItem } from "@/components/tr/boutique/TrTrackingEvents";
 import { TrBoutiqueProductPage } from "@/components/tr/boutique/pdp/TrBoutiqueProductPage";
 import { getProductSlugSeo } from "@/lib/tr/catalog/productSlug";
 import { loadPublicProductVariants } from "@/lib/tr/catalog/publicVariants";
@@ -99,11 +100,18 @@ export default async function BoutiqueProductPage({
   );
 
   return (
-    <TrBoutiqueProductPage
-      product={product}
-      colorSiblings={colorSiblings}
-      variants={variants}
-      iyzicoCheckout={iyzicoCheckout}
-    />
+    <>
+      <TrTrackViewItem
+        productId={product.id}
+        name={product.title}
+        priceKurus={product.priceKurus}
+      />
+      <TrBoutiqueProductPage
+        product={product}
+        colorSiblings={colorSiblings}
+        variants={variants}
+        iyzicoCheckout={iyzicoCheckout}
+      />
+    </>
   );
 }

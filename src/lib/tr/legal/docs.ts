@@ -34,10 +34,14 @@ export type TrLegalBoutiqueContext = {
   customDomain: string | null;
   /** Published on künye (normal for TR e-commerce). */
   vergiNo: string | null;
+  /** Tax office, printed next to the tax id when set. */
+  vergiDairesi: string | null;
   /** Optional; leave null until boutique has KEP. */
   kepAddress: string | null;
   /** Optional; şahıs often N/A. */
   mersisNo: string | null;
+  /** Names of the ad / analytics tools the store loads (cookie policy); empty = none. */
+  trackingTools: string[];
   /** Boutique may send marketing SMS/email (İYS / açık rıza). */
   marketingEnabled: boolean;
 };
@@ -92,7 +96,9 @@ export function getTrLegalDoc(
     `${ctx.slug}.cortisstyle.com`;
   const siteUrl = `https://${domain}`;
   const vergiLine = ctx.vergiNo?.trim()
-    ? `Vergi kimlik no: ${ctx.vergiNo.trim()}`
+    ? ctx.vergiDairesi?.trim()
+      ? `Vergi dairesi / vergi kimlik no: ${ctx.vergiDairesi.trim()} / ${ctx.vergiNo.trim()}`
+      : `Vergi kimlik no: ${ctx.vergiNo.trim()}`
     : "Vergi kimlik no: satıcı kayıtlarında güncellenecektir.";
   const kepLine = ctx.kepAddress?.trim()
     ? `KEP: ${ctx.kepAddress.trim()}`
@@ -292,6 +298,11 @@ export function getTrLegalDoc(
             "Hedefleme / reklam çerezleri: ilgi alanlarıyla bağlantılı reklam gösterilmesi amacıyla kullanılabilir (rıza gerektirenler için).",
             "Kişiselleştirme çerezleri: dil, bölge gibi tercihleri hatırlamak için kullanılabilir.",
             "Analitik çerezler: Platform’u analiz etmek, performansını artırmak ve geliştirmek amacıyla kullanılabilir.",
+            ...(ctx.trackingTools.length > 0
+              ? [
+                  `Bu Site’de ${ctx.trackingTools.join(", ")} kullanılmaktadır. Bu araçların çerezleri yalnızca çerez uyarısında “Tümünü kabul et” seçeneğini onaylamanız hâlinde yüklenir; “Yalnızca zorunlu” seçeneğinde yüklenmez.`,
+                ]
+              : []),
           ],
         },
         {
@@ -715,7 +726,7 @@ export function getTrLegalDoc(
         {
           heading: "Hakkımızda",
           paragraphs: [
-            `${brand}, ${seller} tarafından işletilen bir moda butiğidir.`,
+            `${brand}, ${seller} tarafından işletilen bir çevrimiçi mağazadır.`,
             ctx.physicalAddress?.trim()
               ? `Mağaza / gönderim adresi: ${address}`
               : "Mağaza bilgileri künye bölümünde güncellenir.",
@@ -733,7 +744,9 @@ export function getTrLegalDoc(
             mersisLine,
             kepLine,
             `Web: ${siteUrl}`,
-            "İşletme türü: şahıs işletmesi olabilir; MERSİS / KEP bilgileri mevcut oldukça güncellenir.",
+            ...(ctx.mersisNo?.trim()
+              ? []
+              : ["İşletme türü: şahıs işletmesi olabilir; MERSİS / KEP bilgileri mevcut oldukça güncellenir."]),
           ],
         },
         {

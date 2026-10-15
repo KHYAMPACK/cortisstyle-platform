@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { TrPurchaseTracker } from "@/components/tr/boutique/TrTrackingEvents";
 import { TrIyzicoResumePay } from "@/components/tr/commerce/TrIyzicoResumePay";
 import { TrIyzicoCheckoutHoldEffects } from "@/components/tr/commerce/TrIyzicoCheckoutHoldEffects";
 import { resolveBoutiqueBrandLabel } from "@/lib/tr/boutiqueBrand";
@@ -84,6 +85,22 @@ export default async function BoutiqueOrderConfirmationPage({
         <TrIyzicoCheckoutHoldEffects
           boutiqueSlug={boutique.slug}
           phase={iyzicoHoldPhase}
+        />
+      ) : null}
+      {orderBelongs && order && order.paymentStatus === "paid" && !order.isSandbox ? (
+        <TrPurchaseTracker
+          orderId={order.id}
+          totalKurus={order.totalKurus}
+          shippingKurus={order.shipment.feeKurus ?? 0}
+          items={boutiqueItems.map((item) => ({
+            id: item.id,
+            productId: item.productId,
+            title: item.title,
+            priceKurus: item.priceKurus,
+            quantity: item.quantity,
+            size: item.size,
+            variantLabel: item.variantLabel,
+          }))}
         />
       ) : null}
       <div className="text-center">
