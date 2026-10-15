@@ -17,6 +17,7 @@
  * Flags: --mode live|sandbox (default live), --replace (update an existing row),
  * --skip-verify (don't call iyzico), --dry-run (write nothing).
  */
+import "./nodeWebSocketStub.mts";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {

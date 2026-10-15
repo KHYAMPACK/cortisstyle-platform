@@ -3,6 +3,7 @@
  * Usage: npx tsx scripts/link-tr-boutique-owner.mts --email owner@example.com --domain example.com
  *    or: npx tsx scripts/link-tr-boutique-owner.mts --email owner@example.com --slug lilabutik
  */
+import "./nodeWebSocketStub.mts";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { setBoutiqueOwnerAdmin } from "../src/lib/tr/catalog/boutiques";
