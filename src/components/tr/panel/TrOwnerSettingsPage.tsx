@@ -3,6 +3,7 @@
 import { TrPanelLink as Link } from "@/components/tr/panel/TrPanelLink";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState, type FormEvent } from "react";
+import { TrOwnerIyzicoCard } from "@/components/tr/panel/TrOwnerIyzicoCard";
 import { TrOwnerPanelGate } from "@/components/tr/panel/TrOwnerPanelGate";
 import { TrOwnerPushNotificationsCard } from "@/components/tr/panel/TrOwnerPushNotificationsCard";
 import { TrPanelImageField } from "@/components/tr/panel/TrPanelImageField";
@@ -509,6 +510,7 @@ export function TrOwnerSettingsPage() {
             <h2 className={panelPageTitleClass}>Ayarlar</h2>
           </div>
           <TrOwnerPushNotificationsCard boutiqueId={activeBoutique.id} />
+          <TrOwnerIyzicoCard key={activeBoutique.id} boutiqueId={activeBoutique.id} />
           <SettingsForm boutiqueId={activeBoutique.id} />
           {isStaff ? (
             <p className={`${panelHintClass} pt-2`}>

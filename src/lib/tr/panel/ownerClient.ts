@@ -22,6 +22,7 @@ import type {
   TrProductCategories,
 } from "@/lib/tr/categories/types";
 import type { TrBoutiqueTracking } from "@/lib/tr/tracking/config";
+import type { IyzicoStatus } from "@/lib/tr/payments/iyzicoKeys";
 import type {
   TrDiscountCampaign,
   TrDiscountCampaignCode,
@@ -1802,4 +1803,43 @@ export async function updateOwnerInvoice(
   }
   if (!data.invoice) throw new Error("Fatura güncellenemedi.");
   return data.invoice;
+}
+
+// --------------------------------------------------------------- card payments (iyzico)
+
+async function iyzicoRequest(
+  boutiqueId: string,
+  init: RequestInit | undefined,
+  failure: string,
+): Promise<IyzicoStatus> {
+  const response = await ownerFetch(
+    `/api/tr/owner/boutiques/${encodeURIComponent(boutiqueId)}/iyzico`,
+    init,
+  );
+  const data = (await parseOwnerJson(response)) as { status?: IyzicoStatus; error?: string };
+  if (!response.ok) throw new Error(data.error ?? failure);
+  if (!data.status) throw new Error(failure);
+  // The storefront and the panel summary now offer (or stop offering) card payments.
+  invalidateOwnerCache("summary:");
+  return data.status;
+}
+
+export function fetchOwnerIyzicoStatus(boutiqueId: string): Promise<IyzicoStatus> {
+  return iyzicoRequest(boutiqueId, undefined, "Ödeme durumu okunamadı.");
+}
+
+/** Checks the keys with iyzico and stores them encrypted; they are never returned. */
+export function connectOwnerIyzico(
+  boutiqueId: string,
+  keys: { apiKey: string; secretKey: string },
+): Promise<IyzicoStatus> {
+  return iyzicoRequest(
+    boutiqueId,
+    { method: "PUT", body: JSON.stringify(keys) },
+    "iyzico bağlanamadı.",
+  );
+}
+
+export function disconnectOwnerIyzico(boutiqueId: string): Promise<IyzicoStatus> {
+  return iyzicoRequest(boutiqueId, { method: "DELETE" }, "Bağlantı kaldırılamadı.");
 }
