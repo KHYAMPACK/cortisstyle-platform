@@ -1,3 +1,4 @@
+import { readReturnShippingPayer } from "@/lib/tr/catalog/storePolicies";
 import { boutiqueHasCarrierIntegration } from "@/lib/tr/shipping/registry";
 import { trBoutiqueLegalPath } from "@/lib/tr/paths";
 import { shippingFeeConfigOf } from "@/lib/tr/shipping/quoteShipping";
@@ -39,11 +40,15 @@ export function getPdpDeliverySummary(
     | "freeShippingMinSubtotalKurus"
   > &
     // A store known to have no WhatsApp number must not be told to "write on WhatsApp".
-    Partial<Pick<TrBoutiquePublic, "whatsappPhone">> | null,
+    Partial<Pick<TrBoutiquePublic, "whatsappPhone" | "editorialContent">> | null,
 ): TrPdpDeliverySummary {
   const boutiqueSlug = boutique?.slug ?? null;
   const phone = boutique?.whatsappPhone;
   const noWhatsapp = phone !== undefined && !(phone ?? "").trim();
+  const returnCost =
+    readReturnShippingPayer(boutique?.editorialContent) === "buyer"
+      ? "Cayma kapsamındaki iade kargo ücreti size aittir"
+      : "Cayma kapsamındaki iade kargo ücreti bize aittir";
   const writeUs = noWhatsapp
     ? "Sipariş numaranızla bize e-posta ile yazmanız yeterlidir."
     : "WhatsApp’tan sipariş numaranızla yazmanız yeterlidir.";
@@ -105,8 +110,8 @@ export function getPdpDeliverySummary(
       "Teslimden itibaren ",
       strong("14 gün"),
       carrier
-        ? ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz. Ürünü kullanılmamış ve orijinal ambalajında gönderin.`
-        : ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} Cayma kapsamındaki iade kargo ücreti bize aittir; yeniden stoklama ücreti alınmaz.`,
+        ? ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} ${returnCost}; yeniden stoklama ücreti alınmaz. Ürünü kullanılmamış ve orijinal ambalajında gönderin.`
+        : ` içinde cayma hakkınızı kullanabilirsiniz. ${writeUs} ${returnCost}; yeniden stoklama ücreti alınmaz.`,
     ),
     paragraph(
       noWhatsapp

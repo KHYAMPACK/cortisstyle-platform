@@ -5,6 +5,8 @@
  * Not legal advice — have a lawyer review per boutique before relying on them.
  */
 
+import type { ReturnShippingPayer } from "@/lib/tr/catalog/storePolicies";
+
 export const TR_LEGAL_DOC_IDS = [
   "kvkk",
   "gizlilik",
@@ -44,6 +46,8 @@ export type TrLegalBoutiqueContext = {
   trackingTools: string[];
   /** Boutique may send marketing SMS/email (İYS / açık rıza). */
   marketingEnabled: boolean;
+  /** Who pays the return shipping under the right of withdrawal; the seller when unset. */
+  returnShippingPayer?: ReturnShippingPayer;
 };
 
 export type TrLegalDoc = {
@@ -111,7 +115,10 @@ export function getTrLegalDoc(
     "Siparişler, anlaşmalı kargo firması tarafından satıcının adresinden alınır ve Alıcı’nın bildirdiği adrese teslim edilir. Tahmini teslimat süresi sipariş / kargo bilgilendirmesinde paylaşılır; her hâlükârda yasal azami süreler saklıdır.";
   const returns =
     ctx.exchangePolicy?.trim() ||
-    "Mesafeli satışlarda cayma hakkı, yasal istisnalar saklı kalmak kaydıyla, malın tesliminden itibaren 14 gün içinde kullanılabilir. Cayma kapsamında iade kargo ücreti satıcıya aittir (mevzuat çerçevesinde).";
+    "Mesafeli satışlarda cayma hakkı, yasal istisnalar saklı kalmak kaydıyla, malın tesliminden itibaren 14 gün içinde kullanılabilir. " +
+    (ctx.returnShippingPayer === "buyer"
+      ? "Cayma hakkının kullanılması hâlinde iade kargo ücreti ALICI’ya aittir."
+      : "Cayma kapsamında iade kargo ücreti satıcıya aittir (mevzuat çerçevesinde).");
 
   const docs: Record<TrLegalDocId, TrLegalDoc> = {
     kvkk: {
@@ -578,7 +585,9 @@ export function getTrLegalDoc(
           heading: "Cayma hakkının süresi",
           paragraphs: [
             "Alıcı, satın aldığı eğer bir hizmet ise, bu 14 günlük süre sözleşmenin imzalandığı tarihten itibaren başlar. Cayma hakkı süresi sona ermeden önce, tüketicinin onayı ile hizmetin ifasına başlanan hizmet sözleşmelerinde cayma hakkı kullanılamaz.",
-            "Cayma hakkının kullanımından kaynaklanan masraflar (cayma kapsamındaki iade kargo) SATICI’ya aittir. Yeniden stoklama (restocking) ücreti alınmaz.",
+            ctx.returnShippingPayer === "buyer"
+              ? "Cayma hakkının kullanımından kaynaklanan iade kargo masrafı ALICI’ya aittir. Yeniden stoklama (restocking) ücreti alınmaz."
+              : "Cayma hakkının kullanımından kaynaklanan masraflar (cayma kapsamındaki iade kargo) SATICI’ya aittir. Yeniden stoklama (restocking) ücreti alınmaz.",
             `Cayma hakkının kullanılması için 14 (on dört) günlük süre içinde SATICI’ya iadeli taahhütlü posta, faks veya e-posta (${ctx.email}) / WhatsApp ile yazılı bildirimde bulunulması ve ürünün işbu metinde düzenlenen “Cayma hakkı kullanılamayacak ürünler” hükümleri çerçevesinde kullanılmamış olması şarttır.`,
           ],
         },

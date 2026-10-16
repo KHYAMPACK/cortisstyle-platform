@@ -74,3 +74,16 @@ describe("the cookie policy", () => {
     assert.match(text, /Tümünü kabul et/);
   });
 });
+
+describe("who pays the return shipping", () => {
+  it("says the seller by default and the buyer when the store chooses so", () => {
+    for (const id of ["iade", "on-bilgilendirme", "mesafeli-satis"] as const) {
+      const seller = allText(getTrLegalDoc(id, ctx()));
+      assert.match(seller, /iade kargo[^.]*SATICI’ya aittir|iade kargo ücreti satıcıya aittir/, id);
+      const buyer = allText(getTrLegalDoc(id, ctx({ returnShippingPayer: "buyer" })));
+      assert.doesNotMatch(buyer, /iade kargo[^.]*SATICI’ya aittir|iade kargo ücreti satıcıya aittir/, id);
+    }
+    const buyer = allText(getTrLegalDoc("iade", ctx({ returnShippingPayer: "buyer" })));
+    assert.match(buyer, /iade kargo masrafı ALICI’ya aittir/);
+  });
+});

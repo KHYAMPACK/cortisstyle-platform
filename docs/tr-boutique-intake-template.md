@@ -40,7 +40,7 @@
 - [ ] `freeShippingMinItems` **or** `freeShippingMinSubtotalTry` — optional free-shipping threshold: orders with at least N items, or an items subtotal of at least N TRY, ship free. Set at most one. Leave both out and the fee always applies.
 
 **Page copy (optional)**
-- [ ] `editorialContent` — free-form homepage/SEO copy. `seo`: `{ "title": "…", "description": "…" }` (the browser title and search snippet). For a store on the `natural` skin: `natural`: `{ "announcement", "hero": { "eyebrow", "title", "body", "primaryLabel" }, "usps": [..], "producers": { "title", "body" }, "story": { "eyebrow", "title", "body", "ctaLabel", "ctaHref" } }` — see doc 04. Anything left out falls back to a default built from the store's name, description and categories.
+- [ ] `editorialContent` — free-form homepage/SEO copy. `seo`: `{ "title": "…", "description": "…" }` (the browser title and search snippet). For a store on the `natural` skin: `natural`: `{ "announcement", "hero": { "eyebrow", "title", "body", "primaryLabel" }, "usps": [..], "producers": { "title", "body" }, "story": { "eyebrow", "title", "body", "ctaLabel", "ctaHref" } }` — see doc 04. Anything left out falls back to a default built from the store's name, description and categories. `policies`: `{ "returnShippingPaidBy": "buyer" }` makes the product page and the legal pages say the shopper pays the return shipping under the right of withdrawal (default `"seller"`, the platform's long-standing wording); decide it with the client, because it is part of what shoppers agree to.
 
 **Starter products (optional)**
 - [ ] `products` — array of `{ title, priceTry, sizes?, colors?, category?, images?, stock? }`. Can be left empty and added later via the panel or the batch upload flow.

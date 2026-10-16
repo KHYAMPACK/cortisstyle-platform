@@ -113,6 +113,21 @@ describe("getPdpDeliverySummary", () => {
     assert.match(withWhatsapp, /WhatsApp/);
   });
 
+  it("puts the return shipping on the shopper when the store says so", () => {
+    const text = JSON.stringify(
+      getPdpDeliverySummary({
+        slug: "ornek",
+        name: "Örnek",
+        shippingFeeKurus: 0,
+        freeShippingMinItems: null,
+        freeShippingMinSubtotalKurus: null,
+        editorialContent: { policies: { returnShippingPaidBy: "buyer" } },
+      }).paragraphs,
+    );
+    assert.match(text, /iade kargo ücreti size aittir/);
+    assert.doesNotMatch(text, /bize aittir/);
+  });
+
   it("handles a missing boutique", () => {
     const summary = getPdpDeliverySummary(null);
     assert.equal(summary.legalHref, null);

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { readReturnShippingPayer } from "@/lib/tr/catalog/storePolicies";
 import { resolveBoutiqueContactEmail } from "@/lib/tr/checkoutMode";
 import {
   getTrLegalDoc,
@@ -44,6 +45,7 @@ export default async function BoutiqueLegalPage({ params }: LegalPageProps) {
     mersisNo: boutique.mersisNo,
     trackingTools: trackingToolNames(boutique.tracking),
     marketingEnabled: true,
+    returnShippingPayer: readReturnShippingPayer(boutique.editorialContent),
   };
 
   const legal = getTrLegalDoc(doc, ctx);
