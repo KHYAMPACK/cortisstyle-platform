@@ -102,7 +102,7 @@ export function TrBoutiqueNaturalHeader({ boutique }: { boutique: TrBoutiquePubl
           height={64}
           unoptimized
           priority
-          className="h-11 w-auto object-contain md:h-12"
+          className="h-11 w-auto object-contain mix-blend-multiply md:h-12"
         />
       ) : (
         <TrNaturalWordmark
