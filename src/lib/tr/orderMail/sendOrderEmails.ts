@@ -11,6 +11,7 @@ import {
 } from "@/lib/tr/orderMail/templates";
 import { createOrderConfirmToken } from "@/lib/tr/orderConfirmToken";
 import { getOrderByIdAdmin } from "@/lib/tr/orders";
+import { listBoutiqueAdminEmails } from "@/lib/tr/panel/boutiqueAdmins";
 import { trOrderConfirmationPath, trPanelOrderPath } from "@/lib/tr/paths";
 import { storeAddress, storeCustomerPath } from "@/lib/tr/seo/storeAddress";
 import type { TrBoutique, TrOrderWithItems } from "@/types/tr-marketplace";
@@ -78,6 +79,10 @@ export async function sendOrderConfirmationEmailSafe(orderId: string): Promise<v
 async function ownerAlertRecipients(boutique: TrBoutique): Promise<string[]> {
   const recipients = new Set<string>();
   if (boutique.contactEmail?.trim()) recipients.add(boutique.contactEmail.trim().toLowerCase());
+  // Every extra panel admin of the store hears about new orders too.
+  for (const email of await listBoutiqueAdminEmails(boutique.id).catch(() => [])) {
+    recipients.add(email);
+  }
   if (boutique.ownerUserId) {
     const admin = getServiceSupabase();
     if (admin) {

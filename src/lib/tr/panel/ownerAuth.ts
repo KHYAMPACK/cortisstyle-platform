@@ -1,6 +1,10 @@
 import { createClient, type User } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseAdmin";
 import { mapBoutiqueRow } from "@/lib/tr/mappers";
+import {
+  confirmedEmailOf,
+  listBoutiqueIdsAdministeredBy,
+} from "@/lib/tr/panel/boutiqueAdmins";
 import type { TrBoutique } from "@/types/tr-marketplace";
 
 export interface TrOwnerAuthContext {
@@ -56,6 +60,38 @@ export async function listBoutiquesOwnedByUser(
   if (error) throw error;
 
   return (data ?? []).map((row) => mapBoutiqueRow(row as Record<string, unknown>));
+}
+
+/**
+ * The stores a signed-in user may open: the ones they own, plus the ones whose admin
+ * list (`tr_boutique_admins`) has their confirmed e-mail address.
+ */
+export async function listBoutiquesForUser(user: User): Promise<TrBoutique[]> {
+  const owned = await listBoutiquesOwnedByUser(user.id);
+  const email = confirmedEmailOf(user);
+  if (!email) return owned;
+
+  const adminIds = (await listBoutiqueIdsAdministeredBy(email)).filter(
+    (id) => !owned.some((boutique) => boutique.id === id),
+  );
+  if (adminIds.length === 0) return owned;
+
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    throw new Error("Supabase service role is not configured.");
+  }
+  const { data, error } = await supabase
+    .from("tr_boutiques")
+    .select("*")
+    .in("id", adminIds);
+  if (error) throw error;
+
+  const administered = (data ?? []).map((row) =>
+    mapBoutiqueRow(row as Record<string, unknown>),
+  );
+  return [...owned, ...administered].sort((a, b) =>
+    a.name.localeCompare(b.name, "tr"),
+  );
 }
 
 export async function listAllBoutiques(): Promise<TrBoutique[]> {
@@ -122,7 +158,7 @@ export async function requireTrOwner(
     const isStaff = isConfirmedStaffUser(user);
     const boutiques = isStaff
       ? await listAllBoutiques()
-      : await listBoutiquesOwnedByUser(user.id);
+      : await listBoutiquesForUser(user);
 
     return {
       ok: true,
