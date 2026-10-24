@@ -36,13 +36,8 @@ export function TrBoutiqueNaturalFooter({ boutique }: { boutique: TrBoutiquePubl
   const legal = (doc: string) => trBoutiqueLegalPath(slug, doc);
   const email = resolveBoutiqueContactEmail(boutique);
   const instagram = boutique.instagramHandle ? instagramProfileUrl(boutique.instagramHandle) : null;
-  const registry = [
-    boutique.legalName,
-    boutique.mersisNo ? `MERSİS No: ${boutique.mersisNo}` : null,
-    boutique.vergiNo
-      ? `Vergi No: ${boutique.vergiNo}${boutique.vergiDairesi ? ` (${boutique.vergiDairesi})` : ""}`
-      : null,
-  ].filter(Boolean);
+  // Only the seller's name here; MERSİS and tax details stay on the Hakkımızda page.
+  const registry = [boutique.legalName].filter(Boolean);
 
   return (
     <footer className="relative mt-auto overflow-hidden bg-[color:var(--nat-olive-deep)] text-[#f3eee2]">
@@ -109,7 +104,7 @@ export function TrBoutiqueNaturalFooter({ boutique }: { boutique: TrBoutiquePubl
           <div>
             <h3 className={HEADING}>Kurumsal ve yasal</h3>
             <ul className="mt-4 space-y-2.5">
-              <li><Link href={legal("kunye")} className={LINK}>Künye ve iletişim</Link></li>
+              <li><Link href={legal("kunye")} className={LINK}>Hakkımızda</Link></li>
               <li><Link href={legal("mesafeli-satis")} className={LINK}>Mesafeli satış sözleşmesi</Link></li>
               <li><Link href={legal("on-bilgilendirme")} className={LINK}>Ön bilgilendirme formu</Link></li>
               <li><Link href={legal("iade")} className={LINK}>İptal, iade ve cayma</Link></li>

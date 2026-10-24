@@ -48,9 +48,11 @@ export function TrBoutiqueNaturalHeader({ boutique }: { boutique: TrBoutiquePubl
   const favCount = favorites.hydrated ? favorites.itemCount : 0;
   const accountLabel = getTrAccountChromeLabel(user, isAuthenticated);
   const onCheckout = /\/odeme(\/|$)/.test(pathname);
-  const announcement =
-    readNaturalOverrides(boutique.editorialContent).announcement ??
-    freeShippingPromoCopy(shippingFeeConfigOf(boutique));
+  const overrides = readNaturalOverrides(boutique.editorialContent);
+  const announcement = overrides.announcement ?? freeShippingPromoCopy(shippingFeeConfigOf(boutique));
+  // An address on another site (the foundation's) opens in a new tab.
+  const announcementHref = overrides.announcement ? overrides.announcementHref : null;
+  const announcementIsExternal = Boolean(announcementHref && !announcementHref.startsWith("/"));
 
   useEffect(() => {
     return () => {
@@ -211,7 +213,17 @@ export function TrBoutiqueNaturalHeader({ boutique }: { boutique: TrBoutiquePubl
     <header className="sticky top-0 z-50 border-b border-[color:var(--nat-line)] bg-[color:var(--nat-paper)]/95 backdrop-blur-md">
       {announcement && !onCheckout ? (
         <p className="truncate bg-[color:var(--nat-olive-deep)] px-3 py-2 text-center text-[11px] tracking-[0.14em] text-[#f3eee2] uppercase">
-          {announcement}
+          {announcementHref ? (
+            <a
+              href={announcementHref}
+              {...(announcementIsExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              className="transition-opacity hover:opacity-80"
+            >
+              {announcement}
+            </a>
+          ) : (
+            announcement
+          )}
         </p>
       ) : null}
 
@@ -231,7 +243,7 @@ export function TrBoutiqueNaturalHeader({ boutique }: { boutique: TrBoutiquePubl
         <form
           onSubmit={submitSearch}
           role="search"
-          className="relative ml-auto hidden max-w-md flex-1 lg:ml-6 lg:block"
+          className="relative hidden max-w-md flex-1 lg:ml-6 lg:block"
         >
           <label className="sr-only" htmlFor="nat-search">
             Ürün ara
@@ -250,7 +262,7 @@ export function TrBoutiqueNaturalHeader({ boutique }: { boutique: TrBoutiquePubl
           />
         </form>
 
-        <div className="ml-auto flex items-center gap-0.5 lg:ml-0">
+        <div className="ml-auto flex items-center gap-0.5">
           <TrBoutiquePendingLink
             href={trBoutiqueProductsPath(slug)}
             kind="products"

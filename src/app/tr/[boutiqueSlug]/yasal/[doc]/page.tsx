@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
+import { readNaturalOverrides } from "@/lib/tr/boutiqueHome/naturalContent";
 import { readReturnShippingPayer } from "@/lib/tr/catalog/storePolicies";
 import { resolveBoutiqueContactEmail } from "@/lib/tr/checkoutMode";
 import {
@@ -48,7 +50,22 @@ export default async function BoutiqueLegalPage({ params }: LegalPageProps) {
     returnShippingPayer: readReturnShippingPayer(boutique.editorialContent),
   };
 
-  const legal = getTrLegalDoc(doc, ctx);
+  const baseLegal = getTrLegalDoc(doc, ctx);
+
+  // A "natural"-skin store can put its own about text on top of the seller details; the
+  // page is then the store's Hakkımızda page (the footer calls it that).
+  const aboutIntro =
+    doc === "kunye" && isNaturalEditorialSkin(boutique.slug)
+      ? readNaturalOverrides(boutique.editorialContent).aboutIntro
+      : null;
+  const legal = aboutIntro
+    ? {
+        ...baseLegal,
+        title: "Hakkımızda",
+        summary: "Biz kimiz; satıcı kimlik, iletişim ve işletme bilgileri.",
+        sections: baseLegal.sections.filter((section) => section.heading !== "Hakkımızda"),
+      }
+    : baseLegal;
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-10 md:px-8 md:py-14">
@@ -64,6 +81,30 @@ export default async function BoutiqueLegalPage({ params }: LegalPageProps) {
       <p className="mt-3 text-[14px] leading-relaxed text-neutral-600">
         {legal.summary}
       </p>
+
+      {aboutIntro ? (
+        <section className="mt-10 border-b border-black/10 pb-10">
+          {aboutIntro.title ? (
+            <h2 className="font-serif text-2xl tracking-tight text-neutral-950">{aboutIntro.title}</h2>
+          ) : null}
+          <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-neutral-700">
+            {aboutIntro.paragraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+            ))}
+          </div>
+          {aboutIntro.signoff ? <p className="mt-6 text-[15px] text-neutral-700">{aboutIntro.signoff}</p> : null}
+          {aboutIntro.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={aboutIntro.imageUrl}
+              alt={aboutIntro.imageAlt ?? ""}
+              width={150}
+              height={172}
+              className="mt-4 h-auto w-[150px] rounded-sm object-cover"
+            />
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="mt-10 space-y-8">
         {legal.sections.map((section) => (

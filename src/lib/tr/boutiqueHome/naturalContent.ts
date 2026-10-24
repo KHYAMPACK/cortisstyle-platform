@@ -20,8 +20,21 @@ export interface NaturalStoryOverride {
   ctaHref: string | null;
 }
 
+/** Text above the seller details on the store's "Hakkımızda" page (the old shop's own about text). */
+export interface NaturalAboutIntro {
+  title: string | null;
+  paragraphs: string[];
+  /** "Sevgi ve saygımızla;" — shown after the text, before the picture. */
+  signoff: string | null;
+  imageUrl: string | null;
+  imageAlt: string | null;
+}
+
 export interface NaturalOverrides {
   announcement: string | null;
+  /** Where the top bar leads (an https address opens in a new tab). */
+  announcementHref: string | null;
+  aboutIntro: NaturalAboutIntro | null;
   heroEyebrow: string | null;
   heroTitle: string | null;
   heroBody: string | null;
@@ -35,6 +48,8 @@ export interface NaturalOverrides {
 
 export const EMPTY_NATURAL_OVERRIDES: NaturalOverrides = {
   announcement: null,
+  announcementHref: null,
+  aboutIntro: null,
   heroEyebrow: null,
   heroTitle: null,
   heroBody: null,
@@ -78,8 +93,27 @@ export function readNaturalOverrides(
   const storyTitle = text(storyRaw?.title, 120);
   const storyBody = text(storyRaw?.body, 700);
 
+  const aboutRaw = isRecord(raw.aboutIntro) ? raw.aboutIntro : null;
+  const aboutParagraphs = Array.isArray(aboutRaw?.paragraphs)
+    ? aboutRaw.paragraphs
+        .map((entry) => text(entry, 2500))
+        .filter((entry): entry is string => entry !== null)
+        .slice(0, 8)
+    : [];
+
   return {
     announcement: text(raw.announcement, 140),
+    announcementHref: safeHref(raw.announcementHref),
+    aboutIntro:
+      aboutRaw && aboutParagraphs.length > 0
+        ? {
+            title: text(aboutRaw.title, 80),
+            paragraphs: aboutParagraphs,
+            signoff: text(aboutRaw.signoff, 80),
+            imageUrl: safeHref(aboutRaw.imageUrl),
+            imageAlt: text(aboutRaw.imageAlt, 120),
+          }
+        : null,
     heroEyebrow: text(hero.eyebrow, 60),
     heroTitle: text(hero.title, 140),
     heroBody: text(hero.body, 260),

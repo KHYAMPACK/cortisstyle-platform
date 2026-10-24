@@ -14,7 +14,7 @@ import {
   Truck,
   UserRound,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthPopup } from "@/components/AuthPopup";
 import {
   useTrBoutiqueCommerceScope,
@@ -24,6 +24,7 @@ import { TrBoutiqueEditorialProductCard } from "@/components/tr/boutique/editori
 import { TrBoutiquePersonalInfo } from "@/components/tr/boutique/TrBoutiquePersonalInfo";
 import { useTrBoutiqueProductsOptional } from "@/components/tr/boutique/TrBoutiqueProductsContext";
 import { useAuth } from "@/context/AuthContext";
+import { isNaturalEditorialSkin } from "@/lib/tr/boutiqueHome";
 import { resolveBoutiqueBrandLabel, resolveBoutiqueLogoUrl, resolveBoutiqueThemeAccent } from "@/lib/tr/boutiqueBrand";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 import {
@@ -77,11 +78,15 @@ const ACTION =
 export function TrBoutiqueAuthPageContent({
   boutique,
 }: TrBoutiqueAuthPageContentProps) {
-  const { user, isAuthenticated, needsPasswordSetup, signOut } = useAuth();
+  const { user, isAuthenticated, isInitializing, needsPasswordSetup, signOut } = useAuth();
   const commerce = useTrBoutiqueCommerceScope();
   const favorites = useTrScopedFavorites();
   const boutiqueProducts = useTrBoutiqueProductsOptional();
   const [authOpen, setAuthOpen] = useState(false);
+  // A store with its own skin and domain is not presented as one shop of a platform, and
+  // opens the sign-in / sign-up form straight away instead of behind a "Devam et" button.
+  const ownBrand = isNaturalEditorialSkin(boutique.slug);
+  const autoOpened = useRef(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const accent = resolveBoutiqueThemeAccent(boutique);
@@ -95,6 +100,12 @@ export function TrBoutiqueAuthPageContent({
     const el = document.getElementById("favoriler");
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [isAuthenticated, favorites.items.length]);
+
+  useEffect(() => {
+    if (!ownBrand || autoOpened.current || isInitializing || isAuthenticated) return;
+    autoOpened.current = true;
+    setAuthOpen(true);
+  }, [ownBrand, isInitializing, isAuthenticated]);
 
   // Incomplete signup (OTP done, no password): keep the auth modal open.
   useEffect(() => {
@@ -162,7 +173,9 @@ export function TrBoutiqueAuthPageContent({
             ? firstName
               ? `Merhaba ${firstName}. ${brandTitle} mağaza hesabınız — sipariş ve favorileriniz bu mağazaya özeldir.`
               : `${brandTitle} mağaza hesabınız. Sipariş ve favorileriniz bu mağazaya özeldir.`
-            : `Giriş yapın veya üye olun. Aynı e-posta ile platformdaki diğer mağazalarda da giriş yapabilirsiniz; siparişleriniz her mağazada ayrı tutulur.`}
+            : ownBrand
+              ? "Giriş yapın veya üye olun."
+              : `Giriş yapın veya üye olun. Aynı e-posta ile platformdaki diğer mağazalarda da giriş yapabilirsiniz; siparişleriniz her mağazada ayrı tutulur.`}
         </p>
       </motion.div>
 
@@ -450,7 +463,11 @@ export function TrBoutiqueAuthPageContent({
           }
           setAuthOpen(false);
         }}
-        description={`${brandTitle} için giriş yapın veya üye olun. Aynı e-posta ile platformdaki diğer mağazalarda da giriş yapabilirsiniz.`}
+        description={
+          ownBrand
+            ? `${brandTitle} için giriş yapın veya üye olun.`
+            : `${brandTitle} için giriş yapın veya üye olun. Aynı e-posta ile platformdaki diğer mağazalarda da giriş yapabilirsiniz.`
+        }
         brand={{
           logoUrl,
           logoAlt: boutique.name,

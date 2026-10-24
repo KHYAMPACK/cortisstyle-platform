@@ -75,6 +75,26 @@ describe("readNaturalOverrides", () => {
   it("drops a story without a title or a body", () => {
     assert.equal(readNaturalOverrides({ natural: { story: { title: "T" } } }).story, null);
   });
+
+  it("reads the banner link and the about intro, dropping unsafe links and empty text", () => {
+    const o = readNaturalOverrides({
+      natural: {
+        announcementHref: "https://vakif.example/",
+        aboutIntro: {
+          title: " Tohumluktan ",
+          paragraphs: ["Birinci  paragraf", "", 7, "İkinci"],
+          signoff: "Sevgi ve saygımızla;",
+          imageUrl: "javascript:alert(1)",
+        },
+      },
+    });
+    assert.equal(o.announcementHref, "https://vakif.example/");
+    assert.equal(o.aboutIntro?.title, "Tohumluktan");
+    assert.deepEqual(o.aboutIntro?.paragraphs, ["Birinci paragraf", "İkinci"]);
+    assert.equal(o.aboutIntro?.imageUrl, null);
+    assert.equal(readNaturalOverrides({ natural: { aboutIntro: { title: "T", paragraphs: [] } } }).aboutIntro, null);
+    assert.equal(readNaturalOverrides({ natural: { announcementHref: "http://insecure.example" } }).announcementHref, null);
+  });
 });
 
 describe("safeHref", () => {
