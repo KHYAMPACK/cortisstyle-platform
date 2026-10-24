@@ -21,6 +21,8 @@ const LOGO_ON_DARK_OVERRIDES: Partial<Record<string, string>> = {
 /** High-contrast favicons (tab icons) — prefer readable marks over dark-on-dark logos. */
 const FAVICON_OVERRIDES: Partial<Record<string, string>> = {
   lilabutik: "/tr/boutiques/lilabutik/favicon.png?v=2",
+  // The dandelion bloom of the logo on its own (the wordmark is unreadable at tab size).
+  tohumluktan: "/tr/boutiques/tohumluktan/favicon.png?v=1",
 };
 
 const INTRO_BRAND_LABELS: Partial<Record<string, string>> = {
